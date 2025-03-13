@@ -1,576 +1,501 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Pencil, Plus, MoreVertical, Trash2, AlertTriangle } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-
-// Dummy data for inventory
-const dummyInventory = [
-  {
-    id: "ITEM-001",
-    name: "Office Chair",
-    sku: "FURN-001",
-    category: "Furniture",
-    quantity: 15,
-    reorderLevel: 5,
-    unitPrice: 250.0,
-    supplier: "Furniture Depot",
-  },
-  {
-    id: "ITEM-002",
-    name: "Desk",
-    sku: "FURN-002",
-    category: "Furniture",
-    quantity: 8,
-    reorderLevel: 3,
-    unitPrice: 450.0,
-    supplier: "Furniture Depot",
-  },
-  {
-    id: "ITEM-003",
-    name: "Laptop",
-    sku: "TECH-001",
-    category: "Electronics",
-    quantity: 12,
-    reorderLevel: 5,
-    unitPrice: 1299.99,
-    supplier: "Tech Solutions Inc.",
-  },
-  {
-    id: "ITEM-004",
-    name: "Monitor",
-    sku: "TECH-002",
-    category: "Electronics",
-    quantity: 20,
-    reorderLevel: 8,
-    unitPrice: 349.99,
-    supplier: "Tech Solutions Inc.",
-  },
-  {
-    id: "ITEM-005",
-    name: "Keyboard",
-    sku: "TECH-003",
-    category: "Electronics",
-    quantity: 25,
-    reorderLevel: 10,
-    unitPrice: 89.99,
-    supplier: "Tech Solutions Inc.",
-  },
-  {
-    id: "ITEM-006",
-    name: "Paper (A4)",
-    sku: "SUPP-001",
-    category: "Office Supplies",
-    quantity: 50,
-    reorderLevel: 20,
-    unitPrice: 45.99,
-    supplier: "Office Supplies Co.",
-  },
-  {
-    id: "ITEM-007",
-    name: "Pens (Box)",
-    sku: "SUPP-002",
-    category: "Office Supplies",
-    quantity: 30,
-    reorderLevel: 15,
-    unitPrice: 12.5,
-    supplier: "Office Supplies Co.",
-  },
-  {
-    id: "ITEM-008",
-    name: "Notebooks",
-    sku: "SUPP-003",
-    category: "Office Supplies",
-    quantity: 40,
-    reorderLevel: 20,
-    unitPrice: 8.75,
-    supplier: "Office Supplies Co.",
-  },
-  {
-    id: "ITEM-009",
-    name: "Filing Cabinet",
-    sku: "FURN-003",
-    category: "Furniture",
-    quantity: 6,
-    reorderLevel: 2,
-    unitPrice: 175.0,
-    supplier: "Furniture Depot",
-  },
-  {
-    id: "ITEM-010",
-    name: "Mouse",
-    sku: "TECH-004",
-    category: "Electronics",
-    quantity: 18,
-    reorderLevel: 8,
-    unitPrice: 45.99,
-    supplier: "Tech Solutions Inc.",
-  },
-]
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card"
+import { Input } from "../../../components/ui/input"
+import { Button } from "../../../components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../components/ui/dialog"
+import { ArrowUpDown, Download, Eye, FileDown, Search, Plus, Pencil, Save, X, Trash2 } from "lucide-react"
+import { useToast } from "../../../hooks/use-toast"
+import { cn } from "../../../lib/utils"
+import { inventory, gapAnalysis } from "../../../data/mockData"
 
 export default function InventoryPage() {
-  const [inventory, setInventory] = useState([])
+  const [items, setItems] = useState([])
+  const [gaps, setGaps] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [currentItem, setCurrentItem] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [editingItemId, setEditingItemId] = useState(null)
-  const [editedItem, setEditedItem] = useState(null)
+  const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" })
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({})
   const { toast } = useToast()
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    sku: "",
-    category: "",
-    quantity: 0,
-    reorderLevel: 0,
-    unitPrice: 0,
-    supplier: "",
-  })
-
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setInventory(dummyInventory)
-      setLoading(false)
-    }, 1000)
+    setItems(inventory || [])
+    setGaps(gapAnalysis || [])
   }, [])
 
-  // Handle search
-  const filteredInventory = inventory.filter(
+  const filteredItems = items.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.supplier.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.quantity.toString().includes(searchTerm)
   )
 
-  const handleAddItem = () => {
-    setIsEditMode(false)
-    setFormData({
-      name: "",
-      sku: "",
-      category: "",
-      quantity: 0,
-      reorderLevel: 0,
-      unitPrice: 0,
-      supplier: "",
-    })
-    setIsDialogOpen(true)
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    switch (sortConfig.key) {
+      case "date":
+        return sortConfig.direction === "asc"
+          ? new Date(a.lastUpdated) - new Date(b.lastUpdated)
+          : new Date(b.lastUpdated) - new Date(a.lastUpdated)
+      case "quantity":
+        return sortConfig.direction === "asc"
+          ? a.quantity - b.quantity
+          : b.quantity - a.quantity
+      case "lastUpdated":
+        return sortConfig.direction === "asc"
+          ? new Date(a.lastUpdated) - new Date(b.lastUpdated)
+          : new Date(b.lastUpdated) - new Date(a.lastUpdated)
+      default:
+        return 0
+    }
+  })
+
+  const requestSort = (key) => {
+    let direction = "asc"
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc"
+    }
+    setSortConfig({ key, direction })
   }
 
-  const handleEditItem = (item) => {
-    setIsEditMode(true)
-    setCurrentItem(item)
-    setFormData({
-      name: item.name,
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return (
+        <ArrowUpDown
+          className={cn(
+            "ml-2 h-4 w-4",
+            sortConfig.direction === "asc" ? "transform rotate-180" : ""
+          )}
+        />
+      )
+    }
+    return <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
+  }
+
+  const handleViewItem = (id) => {
+    toast({
+      title: "View Item",
+      description: `Viewing details for item ${id}`,
+    })
+  }
+
+  const handleDownloadReport = (id) => {
+    toast({
+      title: "Download Report",
+      description: `Downloading report for item ${id}`,
+    })
+  }
+
+  const handleAddItem = (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    const newItem = {
+      id: items.length + 1,
+      sku: formData.get("sku"),
+      name: formData.get("name"),
+      quantity: parseInt(formData.get("quantity")),
+      reorderPoint: parseInt(formData.get("reorderPoint")),
+      description: formData.get("description"),
+      lastUpdated: new Date().toISOString()
+    }
+    setItems([...items, newItem])
+    setIsAddItemOpen(false)
+    toast({
+      title: "Success",
+      description: "Item added successfully",
+    })
+  }
+
+  const handleEdit = (item) => {
+    setEditingId(item.id)
+    setEditForm({
       sku: item.sku,
-      category: item.category,
+      name: item.name,
       quantity: item.quantity,
-      reorderLevel: item.reorderLevel,
-      unitPrice: item.unitPrice,
-      supplier: item.supplier,
+      reorderPoint: item.reorderPoint
     })
-    setIsDialogOpen(true)
   }
 
-  const handleDeleteItem = (itemId) => {
-    setInventory((prevInventory) => prevInventory.filter((item) => item.id !== itemId))
+  const handleSave = (id) => {
+    setItems(items.map(item => 
+      item.id === id 
+        ? { 
+            ...item, 
+            ...editForm,
+            quantity: parseInt(editForm.quantity),
+            reorderPoint: parseInt(editForm.reorderPoint),
+            lastUpdated: new Date().toISOString()
+          }
+        : item
+    ))
+    setEditingId(null)
+    setEditForm({})
+    toast({
+      title: "Success",
+      description: "Item updated successfully"
+    })
+  }
+
+  const handleCancel = () => {
+    setEditingId(null)
+    setEditForm({})
+  }
+
+  const handleDelete = (id) => {
+    setItems(items.filter(item => item.id !== id))
     toast({
       title: "Item Deleted",
-      description: "The inventory item has been deleted successfully.",
-      variant: "destructive",
+      description: "The item has been permanently removed.",
+      variant: "destructive"
     })
   }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "quantity" || name === "reorderLevel" || name === "unitPrice" ? Number.parseFloat(value) : value,
-    }))
+    setEditForm({
+      ...editForm,
+      [e.target.name]: e.target.value
+    })
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    if (isEditMode) {
-      // Update existing item
-      setInventory((prevInventory) =>
-        prevInventory.map((item) => (item.id === currentItem.id ? { ...item, ...formData } : item)),
-      )
-      toast({
-        title: "Item Updated",
-        description: `${formData.name} has been updated successfully.`,
-      })
-    } else {
-      // Add new item
-      const newItem = {
-        id: `ITEM-${Math.floor(Math.random() * 1000)
-          .toString()
-          .padStart(3, "0")}`,
-        ...formData,
-      }
-      setInventory((prev) => [...prev, newItem])
-      toast({
-        title: "Item Added",
-        description: `${formData.name} has been added to inventory.`,
-      })
-    }
-
-    setIsDialogOpen(false)
-  }
-
-  // Handle inline editing
-  const startEditing = (item) => {
-    setEditingItemId(item.id);
-    setEditedItem({ ...item });
-  };
-
-  const handleItemChange = (e, field) => {
-    const value = field === "quantity" || field === "reorderLevel" || field === "unitPrice" 
-      ? Number.parseFloat(e.target.value) 
-      : e.target.value;
-    
-    setEditedItem(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-  
-  const saveInlineChanges = () => {
-    setInventory(prev => 
-      prev.map(item => 
-        item.id === editingItemId ? editedItem : item
-      )
-    );
-    setEditingItemId(null);
-    setEditedItem(null);
+  const exportToCSV = () => {
     toast({
-      title: "Item Updated",
-      description: `${editedItem.name} has been updated successfully.`,
-    });
-  };
+      title: "Export CSV",
+      description: "Exporting inventory to CSV",
+    })
+    const headers = ["SKU", "Name", "Quantity", "Last Updated"]
+    const csvData = sortedItems.map((item) => [
+      item.sku,
+      item.name,
+      item.quantity,
+      new Date(item.lastUpdated).toLocaleDateString()
+    ])
 
-  const cancelEditing = () => {
-    setEditingItemId(null);
-    setEditedItem(null);
-  };
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.join(","))
+      .join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", "inventory.csv")
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Calculate statistics
+  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0)
+  const lowStock = items.filter(item => item.quantity < (item.reorderPoint || 10)).length
+  const averageStock = items.length > 0 ? Math.round(totalItems / items.length) : 0
+  const outOfStock = items.filter(item => item.quantity === 0).length
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle>Inventory Management</CardTitle>
-            <CardDescription>Manage your product inventory</CardDescription>
-          </div>
-          <Button onClick={handleAddItem} className="text-white">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalItems}</div>
+            <p className="text-xs text-muted-foreground">
+              across {items.length} SKUs
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{lowStock}</div>
+            <p className="text-xs text-muted-foreground">
+              items below threshold
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Stock</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{averageStock}</div>
+            <p className="text-xs text-muted-foreground">
+              per SKU
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{outOfStock}</div>
+            <p className="text-xs text-muted-foreground">
+              items to reorder
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+        <div className="relative w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search inventory..."
-              className="max-w-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
             />
           </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline"
+              className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+              onClick={() => setIsAddItemOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Item
+            </Button>
+            <Button 
+              variant="outline"
+              className="px-4 py-2 bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800"
+              onClick={exportToCSV}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export CSV
+            </Button>
+          </div>
+        </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left w-[20%]">SKU</TableHead>
+                <TableHead className="text-left w-[25%]">Name</TableHead>
+                <TableHead className="text-center w-[15%] cursor-pointer" onClick={() => requestSort("quantity")}>
+                  <div className="flex items-center justify-center">
+                    Quantity {getSortIcon("quantity")}
+                  </div>
+                </TableHead>
+                <TableHead className="text-center w-[15%] cursor-pointer" onClick={() => requestSort("lastUpdated")}>
+                  <div className="flex items-center justify-center">
+                    Last Updated {getSortIcon("lastUpdated")}
+                  </div>
+                </TableHead>
+                <TableHead className="text-center w-[25%]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedItems.length === 0 ? (
                 <TableRow>
-                  <TableHead className="text-center">Name</TableHead>
-                  <TableHead className="text-center">SKU</TableHead>
-                  <TableHead className="text-center">Category</TableHead>
-                  <TableHead className="text-center">Quantity</TableHead>
-                  <TableHead className="text-center">Reorder Level</TableHead>
-                  <TableHead className="text-center">Unit Price</TableHead>
-                  <TableHead className="text-center">Supplier</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableCell colSpan={5} className="text-center">
+                    No items found.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      Loading inventory...
+              ) : (
+                sortedItems.map((item) => (
+                  <TableRow key={item.id} className="hover:bg-muted/50">
+                    <TableCell className="text-left">
+                      {editingId === item.id ? (
+                        <Input
+                          name="sku"
+                          value={editForm.sku}
+                          onChange={handleInputChange}
+                          className="w-full border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                        />
+                      ) : (
+                        item.sku
+                      )}
                     </TableCell>
-                  </TableRow>
-                ) : filteredInventory.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      No inventory items found.
+                    <TableCell className="text-left">
+                      {editingId === item.id ? (
+                        <Input
+                          name="name"
+                          value={editForm.name}
+                          onChange={handleInputChange}
+                          className="w-full border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                        />
+                      ) : (
+                        item.name
+                      )}
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredInventory.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            value={editedItem.name} 
-                            onChange={(e) => handleItemChange(e, "name")}
-                            className="text-center"
-                          />
-                        ) : (
-                          <span className="font-medium">{item.name}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            value={editedItem.sku} 
-                            onChange={(e) => handleItemChange(e, "sku")}
-                            className="text-center"
-                          />
-                        ) : (
-                          item.sku
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            value={editedItem.category} 
-                            onChange={(e) => handleItemChange(e, "category")}
-                            className="text-center"
-                          />
-                        ) : (
-                          item.category
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            type="number"
-                            value={editedItem.quantity} 
-                            onChange={(e) => handleItemChange(e, "quantity")}
-                            className="text-center"
-                          />
-                        ) : (
+                    <TableCell className="text-center">
+                      {editingId === item.id ? (
+                        <Input
+                          name="quantity"
+                          type="number"
+                          value={editForm.quantity}
+                          onChange={handleInputChange}
+                          className="w-[100px] mx-auto text-center border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                        />
+                      ) : (
+                        item.quantity
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {new Date(item.lastUpdated).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-center space-x-2">
+                        {editingId === item.id ? (
                           <>
-                            {item.quantity}
-                            {item.quantity <= item.reorderLevel && (
-                              <AlertTriangle className="h-4 w-4 text-amber-500 inline ml-1" />
-                            )}
-                          </>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            type="number"
-                            value={editedItem.reorderLevel} 
-                            onChange={(e) => handleItemChange(e, "reorderLevel")}
-                            className="text-center"
-                          />
-                        ) : (
-                          item.reorderLevel
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            type="number"
-                            step="0.01"
-                            value={editedItem.unitPrice} 
-                            onChange={(e) => handleItemChange(e, "unitPrice")}
-                            className="text-center"
-                          />
-                        ) : (
-                          `$${item.unitPrice.toFixed(2)}`
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <Input 
-                            value={editedItem.supplier} 
-                            onChange={(e) => handleItemChange(e, "supplier")}
-                            className="text-center"
-                          />
-                        ) : (
-                          item.supplier
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {editingItemId === item.id ? (
-                          <div className="flex justify-center gap-2">
                             <Button 
-                              variant="default" 
                               size="sm" 
-                              className="bg-green-600 hover:bg-green-700 text-white p-1"
-                              onClick={saveInlineChanges}
+                              variant="outline"
+                              className="px-4 py-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                              onClick={() => handleSave(item.id)}
                             >
+                              <Save className="h-4 w-4 mr-1" />
                               Save
                             </Button>
                             <Button 
-                              variant="outline" 
                               size="sm" 
-                              className="bg-gray-100 hover:bg-gray-200 p-1"
-                              onClick={cancelEditing}
+                              variant="outline"
+                              className="px-4 py-2 bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-gray-800"
+                              onClick={handleCancel}
                             >
+                              <X className="h-4 w-4 mr-1" />
                               Cancel
                             </Button>
-                          </div>
+                          </>
                         ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-blue-50 hover:bg-blue-100 p-1"
-                            onClick={() => startEditing(item)}
-                          >
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="px-4 py-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </>
                         )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
-      {/* Add/Edit Item Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      {/* Add Item Dialog */}
+      <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "Edit Item" : "Add New Item"}</DialogTitle>
-            <DialogDescription>
-              {isEditMode
-                ? "Update the details of the inventory item"
-                : "Fill in the details to add a new inventory item"}
-            </DialogDescription>
+            <DialogTitle className="text-xl font-semibold">Add New Item</DialogTitle>
           </DialogHeader>
-
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
+          <form onSubmit={handleAddItem}>
+            <div className="mt-4 space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="sku" className="text-sm font-medium">
+                    SKU
+                  </label>
+                  <Input
+                    id="sku"
+                    name="sku"
+                    className="w-full mt-1.5 border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                    placeholder="Enter SKU"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Name
+                  </label>
+                  <Input
+                    id="name"
+                    name="name"
+                    className="w-full mt-1.5 border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                    placeholder="Enter item name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="quantity" className="text-sm font-medium">
+                    Quantity
+                  </label>
+                  <Input
+                    id="quantity"
+                    name="quantity"
+                    type="number"
+                    min="0"
+                    className="w-full mt-1.5 border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                    placeholder="Enter quantity"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="reorderPoint" className="text-sm font-medium">
+                    Reorder Point
+                  </label>
+                  <Input
+                    id="reorderPoint"
+                    name="reorderPoint"
+                    type="number"
+                    min="0"
+                    className="w-full mt-1.5 border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                    placeholder="Enter reorder point"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    className="w-full mt-1.5 min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2"
+                    placeholder="Enter item description"
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="sku" className="text-right">
-                  SKU
-                </Label>
-                <Input
-                  id="sku"
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="category" className="text-right">
-                  Category
-                </Label>
-                <Input
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="quantity" className="text-right">
-                  Quantity
-                </Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  min="0"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="reorderLevel" className="text-right">
-                  Reorder Level
-                </Label>
-                <Input
-                  id="reorderLevel"
-                  name="reorderLevel"
-                  type="number"
-                  min="0"
-                  value={formData.reorderLevel}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="unitPrice" className="text-right">
-                  Unit Price ($)
-                </Label>
-                <Input
-                  id="unitPrice"
-                  name="unitPrice"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.unitPrice}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="supplier" className="text-right">
-                  Supplier
-                </Label>
-                <Input
-                  id="supplier"
-                  name="supplier"
-                  value={formData.supplier}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                  required
-                />
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button"
+                  size="sm" 
+                  variant="outline"
+                  className="px-4 py-2 bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-gray-800"
+                  onClick={() => setIsAddItemOpen(false)}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  size="sm" 
+                  variant="outline"
+                  className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
+                </Button>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="submit">{isEditMode ? "Save Changes" : "Add Item"}</Button>
-            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
     </div>
   )
 }

@@ -66,20 +66,20 @@ export const returnEmails = [
 ];
 
 export const inventory = [
-  { id: 1, name: 'Laptop', sku: 'LAP-001', quantity: 50, reorderPoint: 20 },
-  { id: 2, name: 'Monitor', sku: 'MON-001', quantity: 15, reorderPoint: 25 },
-  { id: 3, name: 'Keyboard', sku: 'KEY-001', quantity: 100, reorderPoint: 30 },
-  { id: 4, name: 'Mouse', sku: 'MOU-001', quantity: 75, reorderPoint: 25 },
-  { id: 5, name: 'Printer', sku: 'PRI-001', quantity: 30, reorderPoint: 10 },
-  { id: 6, name: 'Scanner', sku: 'SCA-001', quantity: 20, reorderPoint: 15 },
-  { id: 7, name: 'Projector', sku: 'PRO-001', quantity: 10, reorderPoint: 5 },
-  { id: 8, name: 'Server', sku: 'SER-001', quantity: 5, reorderPoint: 2 },
-  { id: 9, name: 'Router', sku: 'ROU-001', quantity: 25, reorderPoint: 10 },
-  { id: 10, name: 'Switch', sku: 'SWI-001', quantity: 40, reorderPoint: 20 },
-  { id: 11, name: 'Tablet', sku: 'TAB-001', quantity: 60, reorderPoint: 30 },
-  { id: 12, name: 'Smartphone', sku: 'SMA-001', quantity: 100, reorderPoint: 50 },
-  { id: 13, name: 'Headphones', sku: 'HEA-001', quantity: 80, reorderPoint: 40 },
-  { id: 14, name: 'External Hard Drive', sku: 'EXT-001', quantity: 45, reorderPoint: 20 },
+  { id: 1, name: 'Laptop', sku: 'LAP-001', quantity: 50, reorderPoint: 20, lastUpdated: '2025-03-13' },
+  { id: 2, name: 'Monitor', sku: 'MON-001', quantity: 15, reorderPoint: 25, lastUpdated: '2025-03-12' },
+  { id: 3, name: 'Keyboard', sku: 'KEY-001', quantity: 100, reorderPoint: 30, lastUpdated: '2025-03-11' },
+  { id: 4, name: 'Mouse', sku: 'MOU-001', quantity: 75, reorderPoint: 25, lastUpdated: '2025-03-10' },
+  { id: 5, name: 'Printer', sku: 'PRI-001', quantity: 30, reorderPoint: 10, lastUpdated: '2025-03-09' },
+  { id: 6, name: 'Scanner', sku: 'SCA-001', quantity: 20, reorderPoint: 15, lastUpdated: '2025-03-08' },
+  { id: 7, name: 'Projector', sku: 'PRO-001', quantity: 10, reorderPoint: 5, lastUpdated: '2025-03-07' },
+  { id: 8, name: 'Server', sku: 'SER-001', quantity: 5, reorderPoint: 2, lastUpdated: '2025-03-06' },
+  { id: 9, name: 'Router', sku: 'ROU-001', quantity: 25, reorderPoint: 10, lastUpdated: '2025-03-05' },
+  { id: 10, name: 'Switch', sku: 'SWI-001', quantity: 40, reorderPoint: 20, lastUpdated: '2025-03-04' },
+  { id: 11, name: 'Tablet', sku: 'TAB-001', quantity: 60, reorderPoint: 30, lastUpdated: '2025-03-03' },
+  { id: 12, name: 'Smartphone', sku: 'SMA-001', quantity: 100, reorderPoint: 50, lastUpdated: '2025-03-02' },
+  { id: 13, name: 'Headphones', sku: 'HEA-001', quantity: 80, reorderPoint: 40, lastUpdated: '2025-03-01' },
+  { id: 14, name: 'External Hard Drive', sku: 'EXT-001', quantity: 45, reorderPoint: 20, lastUpdated: '2025-02-28' },
 ];
 
 export const gapAnalysis = [

@@ -16,51 +16,61 @@ import {
   Legend,
 } from "recharts"
 import { FileText, CheckSquare, AlertTriangle } from "lucide-react"
+import { recentInvoices, processedInvoices, pendingInvoices } from "@/data/mockData"
 
 export default function Dashboard() {
-  // Dummy data for charts - removed Pending status
-  const invoiceStatusData = [
-    { name: "Processed", value: 57, color: "#10b981" },
-    { name: "Rejected", value: 8, color: "#ef4444" },
-    { name: "Flagged", value: 5, color: "#6366f1" },
-  ]
+  // Calculate statistics from mock data
+  const totalInvoices = recentInvoices.length + processedInvoices.length + pendingInvoices.length
+  const processedCount = processedInvoices.length
+  const rejectedCount = recentInvoices.filter(invoice => invoice.status === 'rejected').length
+  const flaggedCount = pendingInvoices.filter(invoice => invoice.urgency === 'high').length
 
-  const monthlyData = [
-    { name: "Jan", invoices: 65, amount: 12500 },
-    { name: "Feb", invoices: 59, amount: 10800 },
-    { name: "Mar", invoices: 80, amount: 14300 },
-    { name: "Apr", invoices: 81, amount: 15200 },
-    { name: "May", invoices: 56, amount: 9800 },
-    { name: "Jun", invoices: 55, amount: 9600 },
-    { name: "Jul", invoices: 40, amount: 7200 },
+  // Calculate monthly data from processed invoices
+  const monthlyData = processedInvoices.reduce((acc, invoice) => {
+    const month = new Date(invoice.date).toLocaleString('default', { month: 'short' })
+    const existingMonth = acc.find(item => item.name === month)
+    if (existingMonth) {
+      existingMonth.invoices++
+      existingMonth.amount += invoice.amount
+    } else {
+      acc.push({ name: month, invoices: 1, amount: invoice.amount })
+    }
+    return acc
+  }, [])
+
+  // Invoice status data
+  const invoiceStatusData = [
+    { name: "Processed", value: processedCount, color: "#10b981" },
+    { name: "Rejected", value: rejectedCount, color: "#ef4444" },
+    { name: "Flagged", value: flaggedCount, color: "#6366f1" },
   ]
 
   const stats = [
     {
       title: "Total Invoices",
-      value: "1,284",
-      description: "↑ 16% from last month",
+      value: totalInvoices.toString(),
+      description: `${((processedCount / totalInvoices) * 100).toFixed(0)}% processed`,
       icon: FileText,
       color: "bg-blue-100 text-blue-700",
     },
     {
       title: "Processed",
-      value: "1,093",
-      description: "85% completion rate",
+      value: processedCount.toString(),
+      description: `${((processedCount / totalInvoices) * 100).toFixed(0)}% completion rate`,
       icon: CheckSquare,
       color: "bg-green-100 text-green-700",
     },
     {
       title: "Rejected",
-      value: "149",
-      description: "12% of total invoices",
+      value: rejectedCount.toString(),
+      description: `${((rejectedCount / totalInvoices) * 100).toFixed(0)}% of total invoices`,
       icon: AlertTriangle,
       color: "bg-red-100 text-red-700",
     },
     {
       title: "Flagged Issues",
-      value: "42",
-      description: "3% require attention",
+      value: flaggedCount.toString(),
+      description: `${((flaggedCount / totalInvoices) * 100).toFixed(0)}% require attention`,
       icon: AlertTriangle,
       color: "bg-purple-100 text-purple-700",
     },

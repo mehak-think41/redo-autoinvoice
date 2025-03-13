@@ -1,353 +1,251 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CheckCircle, XCircle, Eye, AlertTriangle } from "lucide-react"
+import { ArrowUpDown, Download, Eye, Search, CheckCircle, XCircle } from "lucide-react"
+import { pendingInvoices } from "@/data/mockData"
 import { useToast } from "@/hooks/use-toast"
 
-// Dummy data for pending invoices
-const dummyInvoices = [
-  {
-    id: "INV-201",
-    vendor: "Office Supplies Co.",
-    date: "2025-03-10",
-    amount: 1250.99,
-    status: "pending",
-    items: [
-      { id: 1, name: "Paper (A4)", quantity: 10, price: 45.99 },
-      { id: 2, name: "Pens (Box)", quantity: 5, price: 12.5 },
-      { id: 3, name: "Notebooks", quantity: 20, price: 8.75 },
-    ],
-    flagged: false,
-  },
-  {
-    id: "INV-202",
-    vendor: "Tech Solutions Inc.",
-    date: "2025-03-09",
-    amount: 3499.5,
-    status: "pending",
-    items: [
-      { id: 1, name: "Laptop", quantity: 1, price: 1299.99 },
-      { id: 2, name: "Monitor", quantity: 2, price: 349.99 },
-      { id: 3, name: "Keyboard", quantity: 1, price: 89.99 },
-    ],
-    flagged: true,
-    flagReason: "Price discrepancy on monitor",
-  },
-  {
-    id: "INV-203",
-    vendor: "Furniture Depot",
-    date: "2025-03-08",
-    amount: 5750.0,
-    status: "pending",
-    items: [
-      { id: 1, name: "Office Chair", quantity: 5, price: 250.0 },
-      { id: 2, name: "Desk", quantity: 3, price: 450.0 },
-      { id: 3, name: "Filing Cabinet", quantity: 2, price: 175.0 },
-    ],
-    flagged: false,
-  },
-  {
-    id: "INV-204",
-    vendor: "Marketing Services LLC",
-    date: "2025-03-07",
-    amount: 2100.0,
-    status: "pending",
-    items: [{ id: 1, name: "Social Media Campaign", quantity: 1, price: 2100.0 }],
-    flagged: true,
-    flagReason: "Missing contract reference",
-  },
-  {
-    id: "INV-205",
-    vendor: "Catering Express",
-    date: "2025-03-06",
-    amount: 875.25,
-    status: "pending",
-    items: [
-      { id: 1, name: "Lunch Catering", quantity: 25, price: 15.99 },
-      { id: 2, name: "Coffee Service", quantity: 1, price: 75.0 },
-      { id: 3, name: "Snacks", quantity: 30, price: 3.5 },
-    ],
-    flagged: false,
-  },
-]
-
 export default function PendingInvoicesPage() {
-  const [invoices, setInvoices] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedInvoice, setSelectedInvoice] = useState(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [sortConfig, setSortConfig] = useState({ key: "date", direction: "desc" })
   const { toast } = useToast()
 
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setInvoices(dummyInvoices)
-      setLoading(false)
-    }, 1000)
-  }, [])
-
-  // Handle search
-  const filteredInvoices = invoices.filter(
+  const filteredInvoices = pendingInvoices.filter(
     (invoice) =>
-      invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.vendor.toLowerCase().includes(searchTerm.toLowerCase()),
+      (invoice.number?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (invoice.company?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      invoice.amount?.toString().includes(searchTerm)
   )
 
-  const handleViewInvoice = (invoice) => {
-    setSelectedInvoice(invoice)
-    setIsDialogOpen(true)
+  const sortedInvoices = [...filteredInvoices].sort((a, b) => {
+    switch (sortConfig.key) {
+      case "date":
+        return sortConfig.direction === "asc"
+          ? new Date(a.date) - new Date(b.date)
+          : new Date(b.date) - new Date(a.date)
+      case "amount":
+        return sortConfig.direction === "asc"
+          ? a.amount - b.amount
+          : b.amount - a.amount
+      default:
+        return 0
+    }
+  })
+
+  const requestSort = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }))
   }
 
-  const handleApproveInvoice = (invoiceId) => {
-    setInvoices((prevInvoices) =>
-      prevInvoices.map((invoice) => (invoice.id === invoiceId ? { ...invoice, status: "approved" } : invoice)),
-    )
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return (
+        <ArrowUpDown className="h-4 w-4 ml-2" />
+      )
+    }
+    return <ArrowUpDown className="h-4 w-4 ml-2 opacity-50" />
+  }
 
-    setIsDialogOpen(false)
+  const exportToCSV = () => {
+    const headers = ["Invoice Number", "Vendor", "Date", "Amount"]
+    const csvData = sortedInvoices.map((invoice) => [
+      invoice.number,
+      invoice.company,
+      new Date(invoice.date).toLocaleDateString(),
+      invoice.amount.toFixed(2)
+    ])
+
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.join(","))
+      .join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", "pending_invoices.csv")
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleApproveInvoice = (id) => {
     toast({
       title: "Invoice Approved",
-      description: `Invoice ${invoiceId} has been approved successfully.`,
+      description: `Invoice ${id} has been approved successfully.`,
     })
   }
 
-  const handleRejectInvoice = (invoiceId) => {
-    setInvoices((prevInvoices) =>
-      prevInvoices.map((invoice) => (invoice.id === invoiceId ? { ...invoice, status: "rejected" } : invoice)),
-    )
-
-    setIsDialogOpen(false)
+  const handleRejectInvoice = (id) => {
     toast({
       title: "Invoice Rejected",
-      description: `Invoice ${invoiceId} has been rejected.`,
+      description: `Invoice ${id} has been rejected.`,
       variant: "destructive",
     })
   }
 
+  const handleViewInvoice = (id) => {
+    // Navigate to invoice details
+    window.location.href = `/dashboard/invoice/${id}`
+  }
+
+  // Calculate statistics
+  const totalAmount = pendingInvoices.reduce((acc, inv) => acc + inv.amount, 0)
+  const averageAmount = totalAmount / pendingInvoices.length
+  const oldestInvoice = Math.max(...pendingInvoices.map(inv => {
+    const diffTime = Math.abs(new Date() - new Date(inv.date))
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  }))
+  const highPriority = pendingInvoices.filter(inv => inv.amount > 10000).length
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Pending Approvals</CardTitle>
-          <CardDescription>Review and approve pending invoices</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pending</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingInvoices.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {highPriority} high priority
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Amount</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${Math.round(averageAmount).toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">per invoice</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${totalAmount.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">pending approval</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Oldest Invoice</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{oldestInvoice}</div>
+            <p className="text-xs text-muted-foreground">days pending</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search invoices..."
-              className="max-w-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
             />
           </div>
+          <Button 
+            onClick={exportToCSV}
+            variant="outline"
+            className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left w-[25%]">Invoice Number</TableHead>
+                <TableHead className="text-left w-[25%]">Vendor</TableHead>
+                <TableHead className="text-center w-[15%] cursor-pointer" onClick={() => requestSort("date")}>
+                  <div className="flex items-center justify-center">
+                    Date {getSortIcon("date")}
+                  </div>
+                </TableHead>
+                <TableHead className="text-center w-[15%] cursor-pointer" onClick={() => requestSort("amount")}>
+                  <div className="flex items-center justify-center">
+                    Amount {getSortIcon("amount")}
+                  </div>
+                </TableHead>
+                <TableHead className="text-center w-[20%]">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedInvoices.length === 0 ? (
                 <TableRow>
-                  <TableHead className="text-center">Invoice #</TableHead>
-                  <TableHead className="text-center">Vendor</TableHead>
-                  <TableHead className="text-center">Date</TableHead>
-                  <TableHead className="text-center">Amount</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableCell colSpan={5} className="text-center">
+                    No invoices found.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      Loading invoices...
+              ) : (
+                sortedInvoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium text-left w-[25%]">
+                      {invoice.number}
+                    </TableCell>
+                    <TableCell className="text-left w-[25%]">{invoice.company}</TableCell>
+                    <TableCell className="text-center w-[15%]">{new Date(invoice.date).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-center w-[15%]">${invoice.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-center w-[20%]">
+                      <div className="flex justify-center space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                          onClick={() => handleViewInvoice(invoice.id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="px-4 py-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                          onClick={() => handleApproveInvoice(invoice.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="px-4 py-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
+                          onClick={() => handleRejectInvoice(invoice.id)}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ) : filteredInvoices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No pending invoices found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium text-center">
-                        {invoice.id}
-                        {invoice.flagged && <AlertTriangle className="h-4 w-4 text-amber-500 inline ml-1" />}
-                      </TableCell>
-                      <TableCell className="text-center">{invoice.vendor}</TableCell>
-                      <TableCell className="text-center">{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-center">${invoice.amount.toFixed(2)}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center items-center">
-                          
-                          <Badge className="px-3 py-1 bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 transition-colors font-medium">
-                            Pending
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-3">
-                            <a href={`/dashboard/invoice/${invoice.id}`}>
-                          <Button variant="outline" size="sm" className="text-black-600 border-black-200 hover:bg-black-50 p-1">
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only md:not-sr-only md:ml-2">View</span>
-                          </Button>
-                            </a>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-green-600 border-green-200 hover:bg-green-50 p-1"
-                            onClick={() => handleApproveInvoice(invoice.id)}
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            <span className="sr-only md:not-sr-only md:ml-2">Approve</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-200 hover:bg-red-50 p-1"
-                            onClick={() => handleRejectInvoice(invoice.id)}
-                          >
-                            <XCircle className="h-4 w-4" />
-                            <span className="sr-only md:not-sr-only md:ml-2">Reject</span>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Invoice Details Dialog */}
-      {selectedInvoice && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                Invoice Details: {selectedInvoice.id}
-                {selectedInvoice.flagged && (
-                  <div className="flex items-center ml-2">
-                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 transition-colors font-medium flex items-center">
-                      <AlertTriangle className="h-4 w-4 mr-1" /> Flagged
-                    </Badge>
-                  </div>
-                )}
-              </DialogTitle>
-              <DialogDescription>Review invoice details before approval</DialogDescription>
-            </DialogHeader>
-
-            <Tabs defaultValue="details">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="details">Invoice Details</TabsTrigger>
-                <TabsTrigger value="items">Line Items</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Vendor</h4>
-                    <p className="text-lg font-medium">{selectedInvoice.vendor}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Invoice Date</h4>
-                    <p className="text-lg font-medium">{new Date(selectedInvoice.date).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Total Amount</h4>
-                    <p className="text-lg font-medium">${selectedInvoice.amount.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Status</h4>
-                    <div className="flex items-center mt-1">
-                      <span className="relative flex h-2.5 w-2.5 mr-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                      </span>
-                      <Badge className="bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200 transition-colors font-medium">
-                        Pending
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedInvoice.flagged && (
-                  <div className="bg-amber-50 p-4 rounded-md border border-amber-200 mt-4">
-                    <h4 className="text-sm font-medium text-amber-800 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      Flag Reason
-                    </h4>
-                    <p className="text-amber-700 mt-1">{selectedInvoice.flagReason}</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="items" className="pt-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-center">Item</TableHead>
-                      <TableHead className="text-center">Quantity</TableHead>
-                      <TableHead className="text-center">Unit Price</TableHead>
-                      <TableHead className="text-center">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedInvoice.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="text-center">{item.name}</TableCell>
-                        <TableCell className="text-center">{item.quantity}</TableCell>
-                        <TableCell className="text-center">${item.price.toFixed(2)}</TableCell>
-                        <TableCell className="text-center">${(item.quantity * item.price).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-right font-medium">
-                        Total
-                      </TableCell>
-                      <TableCell className="text-right font-bold">${selectedInvoice.amount.toFixed(2)}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TabsContent>
-            </Tabs>
-
-            <DialogFooter className="flex justify-between sm:justify-between">
-              <Button
-                variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50"
-                onClick={() => handleRejectInvoice(selectedInvoice.id)}
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Reject Invoice
-              </Button>
-              <Button
-                className="bg-green-600 hover:bg-green-700"
-                onClick={() => handleApproveInvoice(selectedInvoice.id)}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Approve Invoice
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   )
 }

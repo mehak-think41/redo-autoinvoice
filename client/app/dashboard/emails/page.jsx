@@ -8,144 +8,67 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Eye, Mail, Reply, Trash2, Search } from "lucide-react"
-
-// Dummy data for return emails
-const dummyEmails = [
-  {
-    id: "EMAIL-001",
-    subject: "Invoice INV-103 Rejection Notice",
-    recipient: "furniture.depot@example.com",
-    date: "2025-03-08",
-    status: "sent",
-    content: `Dear Furniture Depot,
-
-We regret to inform you that invoice INV-103 dated 2025-02-27 has been rejected due to the following reason(s):
-
-- Pricing discrepancy on office chairs
-- Missing purchase order reference
-
-Please address these issues and resubmit the invoice at your earliest convenience.
-
-Best regards,
-Accounts Payable Team
-InvoiceAI`,
-  },
-  {
-    id: "EMAIL-002",
-    subject: "Invoice INV-106 Rejection Notice",
-    recipient: "cleaning.services@example.com",
-    date: "2025-03-05",
-    status: "sent",
-    content: `Dear Cleaning Services Pro,
-
-We regret to inform you that invoice INV-106 dated 2025-02-24 has been rejected due to the following reason(s):
-
-- Service date discrepancy
-- Incorrect billing address
-
-Please address these issues and resubmit the invoice at your earliest convenience.
-
-Best regards,
-Accounts Payable Team
-InvoiceAI`,
-  },
-  {
-    id: "EMAIL-003",
-    subject: "Invoice INV-109 Rejection Notice",
-    recipient: "itsupport@example.com",
-    date: "2025-03-02",
-    status: "sent",
-    content: `Dear IT Support Services,
-
-We regret to inform you that invoice INV-109 dated 2025-02-21 has been rejected due to the following reason(s):
-
-- Unauthorized service charges
-- Missing service agreement reference
-
-Please address these issues and resubmit the invoice at your earliest convenience.
-
-Best regards,
-Accounts Payable Team
-InvoiceAI`,
-  },
-  {
-    id: "EMAIL-004",
-    subject: "Invoice Payment Confirmation: INV-101",
-    recipient: "office.supplies@example.com",
-    date: "2025-03-01",
-    status: "sent",
-    content: `Dear Office Supplies Co.,
-
-This email confirms that payment for invoice INV-101 dated 2025-03-01 has been processed. The payment of $1,250.99 will be transferred to your account within 3-5 business days.
-
-Thank you for your business.
-
-Best regards,
-Accounts Payable Team
-InvoiceAI`,
-  },
-  {
-    id: "EMAIL-005",
-    subject: "Invoice Query: INV-202",
-    recipient: "tech.solutions@example.com",
-    date: "2025-03-09",
-    status: "draft",
-    content: `Dear Tech Solutions Inc.,
-
-We are reviewing invoice INV-202 dated 2025-03-09 and have identified a price discrepancy on the monitors listed. According to our purchase agreement, the unit price should be $299.99 instead of $349.99.
-
-Could you please verify this and send a corrected invoice if necessary?
-
-Best regards,
-Accounts Payable Team
-InvoiceAI`,
-  },
-]
+import { returnEmails } from "@/data/mockData"
+import { useToast } from "@/hooks/use-toast"
 
 export default function EmailsPage() {
   const [emails, setEmails] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedEmail, setSelectedEmail] = useState(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isComposeOpen, setIsComposeOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setEmails(dummyEmails)
-      setLoading(false)
-    }, 1000)
+    // Use mock data instead of dummy data
+    setEmails(returnEmails)
+    setLoading(false)
   }, [])
 
-  // Handle search
   const filteredEmails = emails.filter(
     (email) =>
       email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.recipient.toLowerCase().includes(searchTerm.toLowerCase()),
+      email.sender.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleViewEmail = (email) => {
     setSelectedEmail(email)
     setIsDialogOpen(true)
+    toast({
+      title: "Opening Email",
+      description: `Opening email #${email.id}`,
+    })
+  }
+
+  const handleReplyEmail = (email) => {
+    toast({
+      title: "Composing Reply",
+      description: `Replying to email #${email.id}`,
+    })
+  }
+
+  const handleDeleteEmail = (email) => {
+    toast({
+      title: "Email Deleted",
+      description: `Email #${email.id} has been deleted`,
+      variant: "destructive",
+    })
   }
 
   const getStatusBadge = (status) => {
-    switch (status) {
-      case "sent":
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-4 py-1">
-            Sent
-          </Badge>
-        )
-      case "draft":
-        return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 px-4 py-1">
-            Draft
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline" className="px-4 py-1">{status}</Badge>
-    }
+    return (
+      <Badge
+        variant={status === "unread" ? "default" : "secondary"}
+        className={`px-3 py-1 ${
+          status === "unread"
+            ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        }`}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    )
   }
 
   return (
@@ -166,7 +89,11 @@ export default function EmailsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button className="text-white">
+            <Button
+              variant="outline"
+              className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+              onClick={() => setIsComposeOpen(true)}
+            >
               <Mail className="mr-2 h-4 w-4" />
               Compose Email
             </Button>
@@ -176,11 +103,11 @@ export default function EmailsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px] text-center">Subject</TableHead>
-                  <TableHead className="text-center">Recipient</TableHead>
-                  <TableHead className="text-center">Date</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead className="text-left w-[30%]">Subject</TableHead>
+                  <TableHead className="text-left w-[25%]">Sender</TableHead>
+                  <TableHead className="text-center w-[15%]">Date</TableHead>
+                  <TableHead className="text-center w-[15%]">Status</TableHead>
+                  <TableHead className="text-center w-[15%]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,23 +126,38 @@ export default function EmailsPage() {
                 ) : (
                   filteredEmails.map((email) => (
                     <TableRow key={email.id}>
-                      <TableCell className="font-medium text-center">{email.subject}</TableCell>
-                      <TableCell className="text-center">{email.recipient}</TableCell>
+                      <TableCell className="text-left font-medium">{email.subject}</TableCell>
+                      <TableCell className="text-left">{email.sender}</TableCell>
                       <TableCell className="text-center">{new Date(email.date).toLocaleDateString()}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(email.status)}</TableCell>
                       <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button variant="outline" size="sm" className="p-1" onClick={() => handleViewEmail(email)}>
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only md:not-sr-only md:ml-2">View</span>
+                        <div className="flex justify-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                            onClick={() => handleViewEmail(email)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
                           </Button>
-                          <Button variant="outline" size="sm" className="p-1">
-                            <Reply className="h-4 w-4" />
-                            <span className="sr-only md:not-sr-only md:ml-2">Reply</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-4 py-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                            onClick={() => handleReplyEmail(email)}
+                          >
+                            <Reply className="h-4 w-4 mr-1" />
+                            Reply
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 p-1">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only md:not-sr-only md:ml-2">Delete</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-4 py-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
+                            onClick={() => handleDeleteEmail(email)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
                           </Button>
                         </div>
                       </TableCell>
@@ -231,29 +173,120 @@ export default function EmailsPage() {
       {/* Email Details Dialog */}
       {selectedEmail && (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>{selectedEmail.subject}</DialogTitle>
-              <DialogDescription>
-                Sent to: {selectedEmail.recipient} on {new Date(selectedEmail.date).toLocaleDateString()}
-              </DialogDescription>
+              <DialogTitle className="text-xl font-semibold">
+                {selectedEmail?.subject}
+              </DialogTitle>
+              <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
+                <span>{selectedEmail?.sender}</span>
+                <span>{selectedEmail && new Date(selectedEmail.date).toLocaleDateString()}</span>
+              </div>
             </DialogHeader>
-
-            <div className="border rounded-md p-4 whitespace-pre-line">{selectedEmail.content}</div>
-
-            <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" className="px-1 py-2">
-                <Reply className="h-4 w-4 mr-2" />
-                Reply
-              </Button>
-              <Button variant="outline" className="px-1 py-2">
-                <Mail className="h-4 w-4 mr-2" />
-                Forward
-              </Button>
+            <div className="mt-4 space-y-4">
+              <div className="text-sm">
+                {selectedEmail?.content}
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="px-4 py-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                  onClick={() => {
+                    handleReplyEmail(selectedEmail)
+                    setIsDialogOpen(false)
+                  }}
+                >
+                  <Reply className="h-4 w-4 mr-1" />
+                  Reply
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="px-4 py-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
+                  onClick={() => {
+                    handleDeleteEmail(selectedEmail)
+                    setIsDialogOpen(false)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Compose Email Dialog */}
+      <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Compose New Email
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="to" className="text-sm font-medium">
+                  To
+                </label>
+                <Input
+                  id="to"
+                  className="mt-1.5"
+                  placeholder="Enter recipient email"
+                />
+              </div>
+              <div>
+                <label htmlFor="subject" className="text-sm font-medium">
+                  Subject
+                </label>
+                <Input
+                  id="subject"
+                  className="mt-1.5"
+                  placeholder="Enter email subject"
+                />
+              </div>
+              <div>
+                <label htmlFor="message" className="text-sm font-medium">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  className="w-full mt-1.5 min-h-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Type your message here..."
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="px-4 py-2 bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-gray-800"
+                onClick={() => setIsComposeOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                onClick={() => {
+                  toast({
+                    title: "Email Sent",
+                    description: "Your email has been sent successfully.",
+                  })
+                  setIsComposeOpen(false)
+                }}
+              >
+                <Mail className="h-4 w-4 mr-1" />
+                Send
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
