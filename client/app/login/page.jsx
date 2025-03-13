@@ -8,6 +8,9 @@ import Lottie from "react-lottie-player"
 import { useToast } from "../../hooks/use-toast"
 import invoiceAnimationData from "../../assets/invoice-animation.json"
 import dashboardAnimationData from "../../assets/dashboard-animation.json"
+import Image from 'next/image';
+import heroImage from '@/assets/2.jpg';
+import howItWorksImage from '@/assets/Untitled design.png';
 
 const LoginPage = () => {
   const router = useRouter()
@@ -113,23 +116,23 @@ const LoginPage = () => {
       >
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold mr-2">
+            <div className="h-10 w-10 rounded-lg bg-black flex items-center justify-center text-white font-bold mr-2">
               IA
             </div>
             <span className="text-xl font-bold text-gray-900">InvoiceAI</span>
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <a href="#features" className="text-gray-600 hover:text-black transition-colors">
               Features
             </a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <a href="#how-it-works" className="text-gray-600 hover:text-black transition-colors">
               How it works
             </a>
-            <a href="#testimonials" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <a href="#testimonials" className="text-gray-600 hover:text-black transition-colors">
               Testimonials
             </a>
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors"
               onClick={handleGoogleLogin}
               disabled={loading}
             >
@@ -151,7 +154,7 @@ const LoginPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-blue-50 to-white">
+      <section className="pt-32 pb-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-10 md:mb-0">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
@@ -163,7 +166,7 @@ const LoginPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
@@ -180,8 +183,8 @@ const LoginPage = () => {
             </div>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
-              <Lottie loop animationData={dashboardAnimationData} play style={{ width: "100%", height: 300 }} />
+            <div className="w-full max-w-md rounded-lg overflow-hidden">
+              <Image src={heroImage} alt="AI Invoice Processing" className="w-full h-auto" />
             </div>
           </div>
         </div>
@@ -205,8 +208,8 @@ const LoginPage = () => {
                   key={index}
                   className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow border border-gray-100"
                 >
-                  <div className="bg-blue-50 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                    <Icon className="h-6 w-6 text-blue-600" />
+                  <div className="bg-gray-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                    <Icon className="h-6 w-6 text-gray-800" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
@@ -231,7 +234,7 @@ const LoginPage = () => {
             <div className="md:w-1/2 mb-10 md:mb-0 md:pr-8">
               <div className="space-y-8">
                 <div className="flex items-start">
-                  <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
+                  <div className="bg-black rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
                     1
                   </div>
                   <div>
@@ -244,7 +247,7 @@ const LoginPage = () => {
                 </div>
 
                 <div className="flex items-start">
-                  <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
+                  <div className="bg-black rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
                     2
                   </div>
                   <div>
@@ -257,7 +260,7 @@ const LoginPage = () => {
                 </div>
 
                 <div className="flex items-start">
-                  <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
+                  <div className="bg-black rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
                     3
                   </div>
                   <div>
@@ -270,7 +273,7 @@ const LoginPage = () => {
                 </div>
 
                 <div className="flex items-start">
-                  <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
+                  <div className="bg-black rounded-full w-8 h-8 flex items-center justify-center text-white font-bold mr-4 shrink-0">
                     4
                   </div>
                   <div>
@@ -284,8 +287,8 @@ const LoginPage = () => {
               </div>
             </div>
             <div className="md:w-1/2 flex justify-center">
-              <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden">
-                <Lottie loop animationData={invoiceAnimationData} play style={{ width: "100%", height: 400 }} />
+              <div className="w-full max-w-md rounded-lg overflow-hidden">
+                <Image src={howItWorksImage} alt="How It Works" className="w-full h-auto" />
               </div>
             </div>
           </div>
@@ -327,14 +330,14 @@ const LoginPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-600 text-white">
+      <section className="py-20 bg-black text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to streamline your invoice processing?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Join thousands of businesses that have transformed their accounts payable workflow with InvoiceAI.
           </p>
           <button
-            className="bg-white text-blue-600 px-8 py-3 rounded-md hover:bg-gray-100 transition-colors text-lg font-semibold"
+            className="bg-white text-black px-8 py-3 rounded-md hover:bg-gray-200 transition-colors text-lg font-semibold"
             onClick={handleGoogleLogin}
             disabled={loading}
           >
@@ -349,7 +352,7 @@ const LoginPage = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold mr-2">
+                <div className="h-10 w-10 rounded-lg bg-black flex items-center justify-center text-white font-bold mr-2">
                   IA
                 </div>
                 <span className="text-xl font-bold">InvoiceAI</span>
