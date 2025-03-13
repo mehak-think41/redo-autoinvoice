@@ -168,6 +168,50 @@ export default function ProcessedInvoicesPage() {
     )
   }
 
+  // Function to export table data to CSV
+  const exportToCSV = () => {
+    if (sortedInvoices.length === 0) return
+    
+    // Define CSV headers
+    const headers = ["Invoice #", "Vendor", "Date", "Processed Date", "Amount", "Status", "Items"]
+    
+    // Convert invoice data to CSV rows
+    const csvRows = sortedInvoices.map(invoice => [
+      invoice.id,
+      invoice.vendor,
+      new Date(invoice.date).toLocaleDateString(),
+      new Date(invoice.processedDate).toLocaleDateString(),
+      `$${invoice.amount.toFixed(2)}`,
+      invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1),
+      invoice.items
+    ])
+    
+    // Add headers to the beginning
+    csvRows.unshift(headers)
+    
+    // Convert to CSV string (handle commas and quotes in data)
+    const csvString = csvRows.map(row => 
+      row.map(cell => 
+        typeof cell === 'string' && (cell.includes(',') || cell.includes('"')) 
+          ? `"${cell.replace(/"/g, '""')}"` 
+          : cell
+      ).join(',')
+    ).join('\n')
+    
+    // Create a Blob and download link
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    
+    // Set up and trigger download
+    link.setAttribute('href', url)
+    link.setAttribute('download', `processed-invoices-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -176,7 +220,7 @@ export default function ProcessedInvoicesPage() {
             <CardTitle>Processed Invoices</CardTitle>
             <CardDescription>View all invoices that have been processed</CardDescription>
           </div>
-          <Button>
+          <Button className="text-white px-3 py-2" onClick={exportToCSV}>
             <FileText className="mr-2 h-4 w-4" />
             Export
           </Button>
@@ -280,16 +324,6 @@ export default function ProcessedInvoicesPage() {
                                 <Eye className="mr-2 h-4 w-4 text-gray-600 dark:text-gray-300" />
                                 <span>View details</span>
                               </a>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-green-100 dark:hover:bg-green-700 transition">
-                              <CheckCircle className="mr-2 h-4 w-4 text-green-600 dark:text-green-400" />
-                              <span>Approve</span>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-red-100 dark:hover:bg-red-700 transition">
-                              <XCircle className="mr-2 h-4 w-4 text-red-600 dark:text-red-400" />
-                              <span>Reject</span>
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator className="my-2 border-gray-200 dark:border-gray-700" />

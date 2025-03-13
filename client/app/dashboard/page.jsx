@@ -15,13 +15,12 @@ import {
   Cell,
   Legend,
 } from "recharts"
-import { FileText, CheckSquare, AlertTriangle, Clock } from "lucide-react"
+import { FileText, CheckSquare, AlertTriangle } from "lucide-react"
 
 export default function Dashboard() {
-  // Dummy data for charts
+  // Dummy data for charts - removed Pending status
   const invoiceStatusData = [
-    { name: "Pending", value: 12, color: "#f59e0b" },
-    { name: "Processed", value: 45, color: "#10b981" },
+    { name: "Processed", value: 57, color: "#10b981" },
     { name: "Rejected", value: 8, color: "#ef4444" },
     { name: "Flagged", value: 5, color: "#6366f1" },
   ]
@@ -52,18 +51,18 @@ export default function Dashboard() {
       color: "bg-green-100 text-green-700",
     },
     {
-      title: "Pending Approval",
+      title: "Rejected",
       value: "149",
       description: "12% of total invoices",
-      icon: Clock,
-      color: "bg-amber-100 text-amber-700",
+      icon: AlertTriangle,
+      color: "bg-red-100 text-red-700",
     },
     {
       title: "Flagged Issues",
       value: "42",
       description: "3% require attention",
       icon: AlertTriangle,
-      color: "bg-red-100 text-red-700",
+      color: "bg-purple-100 text-purple-700",
     },
   ]
 
@@ -180,4 +179,3 @@ export default function Dashboard() {
     </div>
   )
 }
-

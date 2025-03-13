@@ -133,18 +133,18 @@ export default function EmailsPage() {
     switch (status) {
       case "sent":
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-4 py-1">
             Sent
           </Badge>
         )
       case "draft":
         return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 px-4 py-1">
             Draft
           </Badge>
         )
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline" className="px-4 py-1">{status}</Badge>
     }
   }
 
@@ -166,7 +166,7 @@ export default function EmailsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button>
+            <Button className="text-white">
               <Mail className="mr-2 h-4 w-4" />
               Compose Email
             </Button>
@@ -176,11 +176,11 @@ export default function EmailsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Subject</TableHead>
-                  <TableHead>Recipient</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[300px] text-center">Subject</TableHead>
+                  <TableHead className="text-center">Recipient</TableHead>
+                  <TableHead className="text-center">Date</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,21 +199,21 @@ export default function EmailsPage() {
                 ) : (
                   filteredEmails.map((email) => (
                     <TableRow key={email.id}>
-                      <TableCell className="font-medium">{email.subject}</TableCell>
-                      <TableCell>{email.recipient}</TableCell>
-                      <TableCell>{new Date(email.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{getStatusBadge(email.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleViewEmail(email)}>
+                      <TableCell className="font-medium text-center">{email.subject}</TableCell>
+                      <TableCell className="text-center">{email.recipient}</TableCell>
+                      <TableCell className="text-center">{new Date(email.date).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-center">{getStatusBadge(email.status)}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-2">
+                          <Button variant="outline" size="sm" className="p-1" onClick={() => handleViewEmail(email)}>
                             <Eye className="h-4 w-4" />
                             <span className="sr-only md:not-sr-only md:ml-2">View</span>
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="p-1">
                             <Reply className="h-4 w-4" />
                             <span className="sr-only md:not-sr-only md:ml-2">Reply</span>
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 p-1">
                             <Trash2 className="h-4 w-4" />
                             <span className="sr-only md:not-sr-only md:ml-2">Delete</span>
                           </Button>
@@ -242,11 +242,11 @@ export default function EmailsPage() {
             <div className="border rounded-md p-4 whitespace-pre-line">{selectedEmail.content}</div>
 
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline">
+              <Button variant="outline" className="px-1 py-2">
                 <Reply className="h-4 w-4 mr-2" />
                 Reply
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" className="px-1 py-2">
                 <Mail className="h-4 w-4 mr-2" />
                 Forward
               </Button>
@@ -257,4 +257,3 @@ export default function EmailsPage() {
     </div>
   )
 }
-

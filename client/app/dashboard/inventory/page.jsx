@@ -13,14 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { Pencil, Plus, MoreVertical, Trash2, AlertTriangle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -136,6 +128,8 @@ export default function InventoryPage() {
   const [isEditMode, setIsEditMode] = useState(false)
   const [currentItem, setCurrentItem] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [editingItemId, setEditingItemId] = useState(null)
+  const [editedItem, setEditedItem] = useState(null)
   const { toast } = useToast()
 
   // Form state
@@ -242,6 +236,42 @@ export default function InventoryPage() {
     setIsDialogOpen(false)
   }
 
+  // Handle inline editing
+  const startEditing = (item) => {
+    setEditingItemId(item.id);
+    setEditedItem({ ...item });
+  };
+
+  const handleItemChange = (e, field) => {
+    const value = field === "quantity" || field === "reorderLevel" || field === "unitPrice" 
+      ? Number.parseFloat(e.target.value) 
+      : e.target.value;
+    
+    setEditedItem(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  const saveInlineChanges = () => {
+    setInventory(prev => 
+      prev.map(item => 
+        item.id === editingItemId ? editedItem : item
+      )
+    );
+    setEditingItemId(null);
+    setEditedItem(null);
+    toast({
+      title: "Item Updated",
+      description: `${editedItem.name} has been updated successfully.`,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingItemId(null);
+    setEditedItem(null);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -250,7 +280,7 @@ export default function InventoryPage() {
             <CardTitle>Inventory Management</CardTitle>
             <CardDescription>Manage your product inventory</CardDescription>
           </div>
-          <Button onClick={handleAddItem}>
+          <Button onClick={handleAddItem} className="text-white">
             <Plus className="mr-2 h-4 w-4" />
             Add Item
           </Button>
@@ -269,14 +299,14 @@ export default function InventoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead className="text-right">Reorder Level</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-center">Name</TableHead>
+                  <TableHead className="text-center">SKU</TableHead>
+                  <TableHead className="text-center">Category</TableHead>
+                  <TableHead className="text-center">Quantity</TableHead>
+                  <TableHead className="text-center">Reorder Level</TableHead>
+                  <TableHead className="text-center">Unit Price</TableHead>
+                  <TableHead className="text-center">Supplier</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -295,39 +325,123 @@ export default function InventoryPage() {
                 ) : (
                   filteredInventory.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>{item.sku}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell className="text-right">
-                        {item.quantity}
-                        {item.quantity <= item.reorderLevel && (
-                          <AlertTriangle className="h-4 w-4 text-amber-500 inline ml-1" />
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            value={editedItem.name} 
+                            onChange={(e) => handleItemChange(e, "name")}
+                            className="text-center"
+                          />
+                        ) : (
+                          <span className="font-medium">{item.name}</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">{item.reorderLevel}</TableCell>
-                      <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
-                      <TableCell>{item.supplier}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreVertical className="h-4 w-4" />
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            value={editedItem.sku} 
+                            onChange={(e) => handleItemChange(e, "sku")}
+                            className="text-center"
+                          />
+                        ) : (
+                          item.sku
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            value={editedItem.category} 
+                            onChange={(e) => handleItemChange(e, "category")}
+                            className="text-center"
+                          />
+                        ) : (
+                          item.category
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            type="number"
+                            value={editedItem.quantity} 
+                            onChange={(e) => handleItemChange(e, "quantity")}
+                            className="text-center"
+                          />
+                        ) : (
+                          <>
+                            {item.quantity}
+                            {item.quantity <= item.reorderLevel && (
+                              <AlertTriangle className="h-4 w-4 text-amber-500 inline ml-1" />
+                            )}
+                          </>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            type="number"
+                            value={editedItem.reorderLevel} 
+                            onChange={(e) => handleItemChange(e, "reorderLevel")}
+                            className="text-center"
+                          />
+                        ) : (
+                          item.reorderLevel
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            type="number"
+                            step="0.01"
+                            value={editedItem.unitPrice} 
+                            onChange={(e) => handleItemChange(e, "unitPrice")}
+                            className="text-center"
+                          />
+                        ) : (
+                          `$${item.unitPrice.toFixed(2)}`
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <Input 
+                            value={editedItem.supplier} 
+                            onChange={(e) => handleItemChange(e, "supplier")}
+                            className="text-center"
+                          />
+                        ) : (
+                          item.supplier
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {editingItemId === item.id ? (
+                          <div className="flex justify-center gap-2">
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white p-1"
+                              onClick={saveInlineChanges}
+                            >
+                              Save
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEditItem(item)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              <span>Edit</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteItem(item.id)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-gray-100 hover:bg-gray-200 p-1"
+                              onClick={cancelEditing}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-blue-50 hover:bg-blue-100 p-1"
+                            onClick={() => startEditing(item)}
+                          >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
@@ -460,4 +574,3 @@ export default function InventoryPage() {
     </div>
   )
 }
-

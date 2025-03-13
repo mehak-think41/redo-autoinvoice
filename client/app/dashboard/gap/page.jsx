@@ -182,18 +182,18 @@ export default function GapAnalysisPage() {
     switch (status) {
       case "pending":
         return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 p-1">
             Pending
           </Badge>
         )
       case "ordered":
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 p-1">
             Ordered
           </Badge>
         )
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline" className="p-1">{status}</Badge>
     }
   }
 
@@ -228,47 +228,43 @@ export default function GapAnalysisPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice #</TableHead>
-                      <TableHead>Item</TableHead>
-                      <TableHead className="text-right">Required</TableHead>
-                      <TableHead className="text-right">Available</TableHead>
-                      <TableHead className="text-right">Shortage</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-center">Item</TableHead>
+                      <TableHead className="text-center">Required</TableHead>
+                      <TableHead className="text-center">Available</TableHead>
+                      <TableHead className="text-center">Shortage</TableHead>
+                      <TableHead className="text-center">Value</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                           Loading shortages...
                         </TableCell>
                       </TableRow>
                     ) : filteredGapItems.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                           No shortages found.
                         </TableCell>
                       </TableRow>
                     ) : (
                       filteredGapItems.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.invoiceId}</TableCell>
-                          <TableCell className="font-medium">{item.item}</TableCell>
-                          <TableCell className="text-right">{item.requiredQuantity}</TableCell>
-                          <TableCell className="text-right">{item.availableQuantity}</TableCell>
-                          <TableCell className="text-right font-medium text-red-600">{item.shortageQuantity}</TableCell>
-                          <TableCell className="text-right">${item.totalShortageValue.toFixed(2)}</TableCell>
-                          <TableCell>{getStatusBadge(item.status)}</TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-center font-medium">{item.item}</TableCell>
+                          <TableCell className="text-center">{item.requiredQuantity}</TableCell>
+                          <TableCell className="text-center">{item.availableQuantity}</TableCell>
+                          <TableCell className="text-center font-medium text-red-600">{item.shortageQuantity}</TableCell>
+                          <TableCell className="text-center">${item.totalShortageValue.toFixed(2)}</TableCell>
+                          <TableCell className="text-center">
                             {item.status === "pending" ? (
-                              <Button variant="outline" size="sm" onClick={() => handleCreateOrder(item)}>
+                              <Button variant="outline" size="sm" className="p-1" onClick={() => handleCreateOrder(item)}>
                                 <ShoppingCart className="h-4 w-4 mr-2" />
                                 Order
                               </Button>
                             ) : (
-                              <Button variant="outline" size="sm" disabled>
+                              <Button variant="outline" size="sm" className="p-1" disabled>
                                 <CheckCircle className="h-4 w-4 mr-2" />
                                 Ordered
                               </Button>
@@ -295,12 +291,12 @@ export default function GapAnalysisPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>PO #</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-center">PO #</TableHead>
+                      <TableHead className="text-center">Vendor</TableHead>
+                      <TableHead className="text-center">Date</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -319,24 +315,24 @@ export default function GapAnalysisPage() {
                     ) : (
                       purchaseOrders.map((order) => (
                         <TableRow key={order.id}>
-                          <TableCell className="font-medium">{order.id}</TableCell>
-                          <TableCell>{order.vendor}</TableCell>
-                          <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center font-medium">{order.id}</TableCell>
+                          <TableCell className="text-center">{order.vendor}</TableCell>
+                          <TableCell className="text-center">{new Date(order.date).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-center">
                             <Badge
                               variant="outline"
                               className={
                                 order.status === "sent"
-                                  ? "bg-green-50 text-green-700 border-green-200"
-                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                                  ? "bg-green-50 text-green-700 border-green-200 p-1"
+                                  : "bg-amber-50 text-amber-700 border-amber-200 p-1"
                               }
                             >
                               {order.status === "sent" ? "Sent" : "Draft"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="outline" size="sm">
+                          <TableCell className="text-center">${order.total.toFixed(2)}</TableCell>
+                          <TableCell className="text-center">
+                            <Button variant="outline" size="sm" className="p-1">
                               <FileText className="h-4 w-4 mr-2" />
                               View
                             </Button>
@@ -417,4 +413,3 @@ export default function GapAnalysisPage() {
     </div>
   )
 }
-
