@@ -14,7 +14,7 @@ const invoiceSchema = new mongoose.Schema({
     customer_details: { 
         name: String, 
         email: String, 
-        phone: String, 
+        phone: String,
         shipping_address: String
     },
     

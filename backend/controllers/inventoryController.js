@@ -65,10 +65,72 @@ const deleteInventory = async (req, res) => {
   }
 };
 
+async function getGapAnalysis(req, res) {
+    try {
+        const inventoryItems = await Inventory.find();
+        
+        const gapAnalysis = inventoryItems
+            .filter(item => item.shortages)
+            .map(item => ({
+                category: item.name,
+                expected: item.shortages.expected,
+                actual: item.shortages.actual,
+                gap: item.shortages.gap,
+                impact: item.shortages.impact
+            }))
+            .sort((a, b) => {
+                const impactOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                return impactOrder[b.impact] - impactOrder[a.impact];
+            });
+
+        const totalCategories = gapAnalysis.length;
+        const totalGap = gapAnalysis.reduce((sum, item) => sum + item.gap, 0);
+        const averageGap = totalGap / totalCategories;
+        const highImpactGaps = gapAnalysis.filter(item => item.impact === 'High').length;
+
+        res.json({
+            summary: {
+                totalCategories,
+                highImpactGaps,
+                averageGap: Math.round(averageGap),
+                totalGap
+            },
+            categories: gapAnalysis
+        });
+    } catch (error) {
+        console.error('Error generating GAP analysis:', error);
+        res.status(500).json({ 
+            message: "Error fetching GAP Analysis", 
+            error: error.message 
+        });
+    }
+}
+
+async function getInventoryShortages(req, res) {
+    try {
+        const { category } = req.query;
+        const query = category ? { name: category, 'shortages.gap': { $gt: 0 } } : { 'shortages.gap': { $gt: 0 } };
+        const shortages = await Inventory.find(query, {
+            sku: 1,
+            name: 1,
+            shortages: 1
+        });
+        res.json({ shortages });
+    } catch (error) {
+        console.error('Error fetching inventory shortages:', error);
+        res.status(500).json({ 
+            message: "Error fetching inventory shortages", 
+            error: error.message 
+        });
+    }
+}
+
 module.exports = {
   createInventory,
   getAllInventory,
   getInventory,
   updateInventory,
-  deleteInventory
+  deleteInventory,
+  getGapAnalysis,
+  getInventoryShortages
 };

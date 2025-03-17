@@ -1,0 +1,839 @@
+[
+    {
+      "invoice_number": "INV-1001",
+      "date": "2025-03-01",
+      "customer_details": {
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "shipping_address": "123 Main St, Springfield, IL, USA"
+      },
+      "amount": 1500,
+      "tax": 120,
+      "total": 1620,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 3,
+      "confidence": "High",
+      "confidence_score": 95,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "LAP-001",
+          "name": "Laptop",
+          "quantity": 1,
+          "unit_price": 1200,
+          "total": 1200
+        },
+        {
+          "sku": "MOU-001",
+          "name": "Mouse",
+          "quantity": 2,
+          "unit_price": 25,
+          "total": 50
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1002",
+      "date": "2025-03-02",
+      "customer_details": {
+        "name": "Jane Smith",
+        "email": "jane.smith@example.com",
+        "phone": "+0987654321",
+        "shipping_address": "456 Elm St, Metropolis, NY, USA"
+      },
+      "amount": 450,
+      "tax": 36,
+      "total": 486,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 2,
+      "confidence": "Medium",
+      "confidence_score": 75,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "KEY-001",
+          "name": "Keyboard",
+          "quantity": 1,
+          "unit_price": 50,
+          "total": 50
+        },
+        {
+          "sku": "HEA-001",
+          "name": "Headphones",
+          "quantity": 1,
+          "unit_price": 100,
+          "total": 100
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1003",
+      "date": "2025-03-03",
+      "customer_details": {
+        "name": "Alice Johnson",
+        "email": "alice.johnson@example.com",
+        "phone": "+1122334455",
+        "shipping_address": "789 Oak St, Smalltown, TX, USA"
+      },
+      "amount": 300,
+      "tax": 24,
+      "total": 324,
+      "payment_method": "Bank Transfer",
+      "payment_status": "Paid",
+      "number_of_units": 1,
+      "confidence": "High",
+      "confidence_score": 90,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "MON-001",
+          "name": "Monitor",
+          "quantity": 1,
+          "unit_price": 300,
+          "total": 300
+        }
+      ],
+      "notes": "Shipped on time."
+    },
+    {
+      "invoice_number": "INV-1004",
+      "date": "2025-03-04",
+      "customer_details": {
+        "name": "Bob Brown",
+        "email": "bob.brown@example.com",
+        "phone": "+5566778899",
+        "shipping_address": "321 Pine St, Bigcity, CA, USA"
+      },
+      "amount": 200,
+      "tax": 16,
+      "total": 216,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Pending",
+      "number_of_units": 1,
+      "confidence": "Low",
+      "confidence_score": 60,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "PRI-001",
+          "name": "Printer",
+          "quantity": 1,
+          "unit_price": 200,
+          "total": 200
+        }
+      ],
+      "notes": "Awaiting delivery confirmation."
+    },
+    {
+      "invoice_number": "INV-1005",
+      "date": "2025-03-05",
+      "customer_details": {
+        "name": "Charlie Davis",
+        "email": "charlie.davis@example.com",
+        "phone": "+9988776655",
+        "shipping_address": "654 Birch St, Hometown, FL, USA"
+      },
+      "amount": 600,
+      "tax": 48,
+      "total": 648,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 92,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "TAB-001",
+          "name": "Tablet",
+          "quantity": 1,
+          "unit_price": 400,
+          "total": 400
+        },
+        {
+          "sku": "SPE-001",
+          "name": "Speakers",
+          "quantity": 1,
+          "unit_price": 200,
+          "total": 200
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1006",
+      "date": "2025-03-06",
+      "customer_details": {
+        "name": "Eve White",
+        "email": "eve.white@example.com",
+        "phone": "+1122334455",
+        "shipping_address": "987 Cedar St, Villagetown, WA, USA"
+      },
+      "amount": 800,
+      "tax": 64,
+      "total": 864,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 3,
+      "confidence": "Medium",
+      "confidence_score": 78,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "SMA-001",
+          "name": "Smartphone",
+          "quantity": 1,
+          "unit_price": 600,
+          "total": 600
+        },
+        {
+          "sku": "HEA-001",
+          "name": "Headphones",
+          "quantity": 2,
+          "unit_price": 100,
+          "total": 200
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1007",
+      "date": "2025-03-07",
+      "customer_details": {
+        "name": "Frank Green",
+        "email": "frank.green@example.com",
+        "phone": "+3344556677",
+        "shipping_address": "753 Maple St, Countryside, OH, USA"
+      },
+      "amount": 1000,
+      "tax": 80,
+      "total": 1080,
+      "payment_method": "Bank Transfer",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 94,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "LAP-001",
+          "name": "Laptop",
+          "quantity": 1,
+          "unit_price": 1200,
+          "total": 1200
+        },
+        {
+          "sku": "MOU-001",
+          "name": "Mouse",
+          "quantity": 1,
+          "unit_price": 25,
+          "total": 25
+        }
+      ],
+      "notes": "Shipped on time."
+    },
+    {
+      "invoice_number": "INV-1008",
+      "date": "2025-03-08",
+      "customer_details": {
+        "name": "Grace Hall",
+        "email": "grace.hall@example.com",
+        "phone": "+4455667788",
+        "shipping_address": "159 Willow St, Uptown, MI, USA"
+      },
+      "amount": 250,
+      "tax": 20,
+      "total": 270,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Pending",
+      "number_of_units": 1,
+      "confidence": "Low",
+      "confidence_score": 65,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "WEB-001",
+          "name": "Webcam",
+          "quantity": 1,
+          "unit_price": 60,
+          "total": 60
+        }
+      ],
+      "notes": "Awaiting delivery confirmation."
+    },
+    {
+      "invoice_number": "INV-1009",
+      "date": "2025-03-09",
+      "customer_details": {
+        "name": "Henry King",
+        "email": "henry.king@example.com",
+        "phone": "+5566778899",
+        "shipping_address": "357 Oak St, Downtown, GA, USA"
+      },
+      "amount": 700,
+      "tax": 56,
+      "total": 756,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 91,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "GAM-001",
+          "name": "Gaming Mouse",
+          "quantity": 1,
+          "unit_price": 40,
+          "total": 40
+        },
+        {
+          "sku": "GAM-002",
+          "name": "Gaming Keyboard",
+          "quantity": 1,
+          "unit_price": 35,
+          "total": 35
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1010",
+      "date": "2025-03-10",
+      "customer_details": {
+        "name": "Ivy Lee",
+        "email": "ivy.lee@example.com",
+        "phone": "+6677889900",
+        "shipping_address": "852 Pine St, Suburbia, NC, USA"
+      },
+      "amount": 900,
+      "tax": 72,
+      "total": 972,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 3,
+      "confidence": "Medium",
+      "confidence_score": 77,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "GAM-003",
+          "name": "Gaming Headset",
+          "quantity": 1,
+          "unit_price": 50,
+          "total": 50
+        },
+        {
+          "sku": "GAM-004",
+          "name": "Gaming Chair",
+          "quantity": 1,
+          "unit_price": 20,
+          "total": 20
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1011",
+      "date": "2025-03-11",
+      "customer_details": {
+        "name": "Jack Wilson",
+        "email": "jack.wilson@example.com",
+        "phone": "+1122334455",
+        "shipping_address": "123 Maple St, Springfield, IL, USA"
+      },
+      "amount": 1200,
+      "tax": 96,
+      "total": 1296,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 93,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "LAP-001",
+          "name": "Laptop",
+          "quantity": 1,
+          "unit_price": 1200,
+          "total": 1200
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1012",
+      "date": "2025-03-12",
+      "customer_details": {
+        "name": "Karen Harris",
+        "email": "karen.harris@example.com",
+        "phone": "+9988776655",
+        "shipping_address": "456 Elm St, Metropolis, NY, USA"
+      },
+      "amount": 300,
+      "tax": 24,
+      "total": 324,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 1,
+      "confidence": "Medium",
+      "confidence_score": 76,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "MON-001",
+          "name": "Monitor",
+          "quantity": 1,
+          "unit_price": 300,
+          "total": 300
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1013",
+      "date": "2025-03-13",
+      "customer_details": {
+        "name": "Liam Clark",
+        "email": "liam.clark@example.com",
+        "phone": "+3344556677",
+        "shipping_address": "789 Oak St, Smalltown, TX, USA"
+      },
+      "amount": 150,
+      "tax": 12,
+      "total": 162,
+      "payment_method": "Bank Transfer",
+      "payment_status": "Paid",
+      "number_of_units": 1,
+      "confidence": "High",
+      "confidence_score": 90,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "MOU-001",
+          "name": "Mouse",
+          "quantity": 3,
+          "unit_price": 25,
+          "total": 75
+        }
+      ],
+      "notes": "Shipped on time."
+    },
+    {
+      "invoice_number": "INV-1014",
+      "date": "2025-03-14",
+      "customer_details": {
+        "name": "Mia Lewis",
+        "email": "mia.lewis@example.com",
+        "phone": "+5566778899",
+        "shipping_address": "321 Pine St, Bigcity, CA, USA"
+      },
+      "amount": 400,
+      "tax": 32,
+      "total": 432,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Pending",
+      "number_of_units": 1,
+      "confidence": "Low",
+      "confidence_score": 62,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "PRI-001",
+          "name": "Printer",
+          "quantity": 1,
+          "unit_price": 200,
+          "total": 200
+        }
+      ],
+      "notes": "Awaiting delivery confirmation."
+    },
+    {
+      "invoice_number": "INV-1015",
+      "date": "2025-03-15",
+      "customer_details": {
+        "name": "Noah Walker",
+        "email": "noah.walker@example.com",
+        "phone": "+1122334455",
+        "shipping_address": "654 Birch St, Hometown, FL, USA"
+      },
+      "amount": 600,
+      "tax": 48,
+      "total": 648,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 94,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "TAB-001",
+          "name": "Tablet",
+          "quantity": 1,
+          "unit_price": 400,
+          "total": 400
+        },
+        {
+          "sku": "SPE-001",
+          "name": "Speakers",
+          "quantity": 1,
+          "unit_price": 200,
+          "total": 200
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1016",
+      "date": "2025-03-16",
+      "customer_details": {
+        "name": "Olivia Hall",
+        "email": "olivia.hall@example.com",
+        "phone": "+9988776655",
+        "shipping_address": "987 Cedar St, Villagetown, WA, USA"
+      },
+      "amount": 800,
+      "tax": 64,
+      "total": 864,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 3,
+      "confidence": "Medium",
+      "confidence_score": 78,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "SMA-001",
+          "name": "Smartphone",
+          "quantity": 1,
+          "unit_price": 600,
+          "total": 600
+        },
+        {
+          "sku": "HEA-001",
+          "name": "Headphones",
+          "quantity": 2,
+          "unit_price": 100,
+          "total": 200
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1017",
+      "date": "2025-03-17",
+      "customer_details": {
+        "name": "Paul Allen",
+        "email": "paul.allen@example.com",
+        "phone": "+3344556677",
+        "shipping_address": "753 Maple St, Countryside, OH, USA"
+      },
+      "amount": 1000,
+      "tax": 80,
+      "total": 1080,
+      "payment_method": "Bank Transfer",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 92,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "LAP-001",
+          "name": "Laptop",
+          "quantity": 1,
+          "unit_price": 1200,
+          "total": 1200
+        },
+        {
+          "sku": "MOU-001",
+          "name": "Mouse",
+          "quantity": 1,
+          "unit_price": 25,
+          "total": 25
+        }
+      ],
+      "notes": "Shipped on time."
+    },
+    {
+      "invoice_number": "INV-1018",
+      "date": "2025-03-18",
+      "customer_details": {
+        "name": "Quinn Baker",
+        "email": "quinn.baker@example.com",
+        "phone": "+5566778899",
+        "shipping_address": "159 Willow St, Uptown, MI, USA"
+      },
+      "amount": 250,
+      "tax": 20,
+      "total": 270,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Pending",
+      "number_of_units": 1,
+      "confidence": "Low",
+      "confidence_score": 65,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "WEB-001",
+          "name": "Webcam",
+          "quantity": 1,
+          "unit_price": 60,
+          "total": 60
+        }
+      ],
+      "notes": "Awaiting delivery confirmation."
+    },
+    {
+      "invoice_number": "INV-1019",
+      "date": "2025-03-19",
+      "customer_details": {
+        "name": "Rachel Green",
+        "email": "rachel.green@example.com",
+        "phone": "+1122334455",
+        "shipping_address": "357 Oak St, Downtown, GA, USA"
+      },
+      "amount": 700,
+      "tax": 56,
+      "total": 756,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 91,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "GAM-001",
+          "name": "Gaming Mouse",
+          "quantity": 1,
+          "unit_price": 40,
+          "total": 40
+        },
+        {
+          "sku": "GAM-002",
+          "name": "Gaming Keyboard",
+          "quantity": 1,
+          "unit_price": 35,
+          "total": 35
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1020",
+      "date": "2025-03-20",
+      "customer_details": {
+        "name": "Sam Carter",
+        "email": "sam.carter@example.com",
+        "phone": "+9988776655",
+        "shipping_address": "852 Pine St, Suburbia, NC, USA"
+      },
+      "amount": 900,
+      "tax": 72,
+      "total": 972,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 3,
+      "confidence": "Medium",
+      "confidence_score": 77,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "GAM-003",
+          "name": "Gaming Headset",
+          "quantity": 1,
+          "unit_price": 50,
+          "total": 50
+        },
+        {
+          "sku": "GAM-004",
+          "name": "Gaming Chair",
+          "quantity": 1,
+          "unit_price": 20,
+          "total": 20
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1021",
+      "date": "2025-03-21",
+      "customer_details": {
+        "name": "Tom Ford",
+        "email": "tom.ford@example.com",
+        "phone": "+3344556677",
+        "shipping_address": "753 Maple St, Countryside, OH, USA"
+      },
+      "amount": 1000,
+      "tax": 80,
+      "total": 1080,
+      "payment_method": "Bank Transfer",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 92,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "LAP-001",
+          "name": "Laptop",
+          "quantity": 1,
+          "unit_price": 1200,
+          "total": 1200
+        },
+        {
+          "sku": "MOU-001",
+          "name": "Mouse",
+          "quantity": 1,
+          "unit_price": 25,
+          "total": 25
+        }
+      ],
+      "notes": "Shipped on time."
+    },
+    {
+      "invoice_number": "INV-1022",
+      "date": "2025-03-22",
+      "customer_details": {
+        "name": "Uma Patel",
+        "email": "uma.patel@example.com",
+        "phone": "+5566778899",
+        "shipping_address": "159 Willow St, Uptown, MI, USA"
+      },
+      "amount": 250,
+      "tax": 20,
+      "total": 270,
+      "payment_method": "Cash on Delivery",
+      "payment_status": "Pending",
+      "number_of_units": 1,
+      "confidence": "Low",
+      "confidence_score": 65,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "WEB-001",
+          "name": "Webcam",
+          "quantity": 1,
+          "unit_price": 60,
+          "total": 60
+        }
+      ],
+      "notes": "Awaiting delivery confirmation."
+    },
+    {
+      "invoice_number": "INV-1023",
+      "date": "2025-03-23",
+      "customer_details": {
+        "name": "Victor King",
+        "email": "victor.king@example.com",
+        "phone": "+1122334455",
+        "shipping_address": "357 Oak St, Downtown, GA, USA"
+      },
+      "amount": 700,
+      "tax": 56,
+      "total": 756,
+      "payment_method": "Credit Card",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 91,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "GAM-001",
+          "name": "Gaming Mouse",
+          "quantity": 1,
+          "unit_price": 40,
+          "total": 40
+        },
+        {
+          "sku": "GAM-002",
+          "name": "Gaming Keyboard",
+          "quantity": 1,
+          "unit_price": 35,
+          "total": 35
+        }
+      ],
+      "notes": "Delivered successfully."
+    },
+    {
+      "invoice_number": "INV-1024",
+      "date": "2025-03-24",
+      "customer_details": {
+        "name": "Wendy White",
+        "email": "wendy.white@example.com",
+        "phone": "+9988776655",
+        "shipping_address": "852 Pine St, Suburbia, NC, USA"
+      },
+      "amount": 900,
+      "tax": 72,
+      "total": 972,
+      "payment_method": "PayPal",
+      "payment_status": "Pending",
+      "number_of_units": 3,
+      "confidence": "Medium",
+      "confidence_score": 77,
+      "invoice_status": "Pending",
+      "line_items": [
+        {
+          "sku": "GAM-003",
+          "name": "Gaming Headset",
+          "quantity": 1,
+          "unit_price": 50,
+          "total": 50
+        },
+        {
+          "sku": "GAM-004",
+          "name": "Gaming Chair",
+          "quantity": 1,
+          "unit_price": 20,
+          "total": 20
+        }
+      ],
+      "notes": "Awaiting payment confirmation."
+    },
+    {
+      "invoice_number": "INV-1025",
+      "date": "2025-03-25",
+      "customer_details": {
+        "name": "Xander Harris",
+        "email": "xander.harris@example.com",
+        "phone": "+3344556677",
+        "shipping_address": "753 Maple St, Countryside, OH, USA"
+      },
+      "amount": 1000,
+      "tax": 80,
+      "total": 1080,
+      "payment_method": "Bank Transfer",
+      "payment_status": "Paid",
+      "number_of_units": 2,
+      "confidence": "High",
+      "confidence_score": 92,
+      "invoice_status": "Approved",
+      "line_items": [
+        {
+          "sku": "LAP-001",
+          "name": "Laptop",
+          "quantity": 1,
+          "unit_price": 1200,
+          "total": 1200
+        },
+        {
+          "sku": "MOU-001",
+          "name": "Mouse",
+          "quantity": 1,
+          "unit_price": 25,
+          "total": 25
+        }
+      ],
+      "notes": "Shipped on time."
+    }
+  ]
