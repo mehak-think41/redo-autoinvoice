@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const docRoutes = require('./routes/docRoutes')
 const errorHandler = require('./middleware/errorHandler')
+const inventoryRoutes = require('./routes/inventoryRoutes');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/h', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 // app.use('/api/doc', docRoutes)
+app.use('/api/inventory', inventoryRoutes);
 
 app.use(errorHandler);
 
