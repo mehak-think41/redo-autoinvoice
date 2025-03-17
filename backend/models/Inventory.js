@@ -4,6 +4,7 @@ const inventorySchema = new mongoose.Schema({
   sku: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   quantity: { type: Number, required: true, min: 0 },
+  unitPrice: { type: Number, required: true, min: 0 }, // Added unitPrice field
   supplierEmail: { 
     type: String, 
     required: true,
