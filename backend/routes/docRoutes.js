@@ -1,6 +1,8 @@
-// const express = require('express');
-// const router = express.Router();
-// const { processInvoice } = require('../controllers/docController');
+const express = require('express');
+const router = express.Router();
+const docController = require('../controllers/docController');
+const Inventory = require('../models/Inventory');
+const Invoice = require('../models/Invoice');
 
 // router.get('/process-invoice', async (req, res) => {
 //     try {

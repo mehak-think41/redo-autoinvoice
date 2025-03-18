@@ -75,7 +75,7 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
-
+//enhance logout function(delete google token from db)
 const logout = (req, res) => {
     res.clearCookie('token');
     res.json({ success: true, message: 'Logged out successfully' });

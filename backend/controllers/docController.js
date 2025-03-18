@@ -63,11 +63,16 @@ async function processInvoice(pdfUrl, userId, emailRecordId) {
     let invoiceStatus;
     if (invoiceData.confidence_score < 50) {
       invoiceStatus = "Pending"; // Low confidence requires manual review
+      //send email to user to check pending emails
     } else if (isFulfillable) {
       invoiceStatus = "Approved";
+      //send email to customer that delivery will be processed soon
     } else {
       invoiceStatus = "Flagged";
+      //send email to user to check flagged emails
+      //send email to customer that stock is low and delivery is delayed
     }
+
 
     const invoice = new Invoice({
       invoice_number: invoiceData.invoice_number,
@@ -147,6 +152,14 @@ async function checkInventoryForInvoice(lineItems) {
 
   return isFulfillable;
 }
+
+//manual approval/reject function
+
+//invoice by id
+
+//get all invoices list with filters(processed, pending, flagged)
+
+//total invoices, pending invoices, approved invoices, flagged invoices in past month
 
 module.exports = {
   processInvoice,

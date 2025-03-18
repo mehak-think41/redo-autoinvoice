@@ -91,6 +91,8 @@ const getGmailInboxLive = async (req, res) => {
     const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
     const date = headers.find(h => h.name === 'Date')?.value || 'Unknown Date';
 
+    //write logic to identify invoices only
+
     const attachments = [];
     if (fullEmail.payload.parts) {
       for (const part of fullEmail.payload.parts) {
