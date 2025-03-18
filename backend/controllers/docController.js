@@ -2,13 +2,15 @@ const axios = require("axios");
 const pdf = require("pdf-parse");
 const { Groq } = require("groq-sdk");
 const Invoice = require("../models/Invoice");
+const Inventory = require("../models/Inventory");
 const { EmailLog } = require('../models/EmailLog');
 
 require('dotenv').config();
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-async function processInvoice(pdfUrl, userId, emailRecordId) {
+// Process Invoice
+const processInvoice = async (pdfUrl, userId, emailRecordId) => {
   try {
     const response = await axios.get(pdfUrl, { responseType: "arraybuffer" });
     const pdfBuffer = Buffer.from(response.data, "binary");
@@ -59,23 +61,16 @@ async function processInvoice(pdfUrl, userId, emailRecordId) {
       invoiceData.line_items = [];
     }
 
-    const isFulfillable = await checkInventoryForInvoice(
-      invoiceData.line_items
-    );
+    const isFulfillable = await checkInventoryForInvoice(invoiceData.line_items);
 
     let invoiceStatus;
     if (invoiceData.confidence_score < 50) {
       invoiceStatus = "Pending"; // Low confidence requires manual review
-      //send email to user to check pending emails
     } else if (isFulfillable) {
       invoiceStatus = "Approved";
-      //send email to customer that delivery will be processed soon
     } else {
       invoiceStatus = "Flagged";
-      //send email to user to check flagged emails
-      //send email to customer that stock is low and delivery is delayed
     }
-
 
     const invoice = new Invoice({
       invoice_number: invoiceData.invoice_number,
@@ -119,9 +114,10 @@ async function processInvoice(pdfUrl, userId, emailRecordId) {
     console.error("Error processing invoice:", error);
     throw error;
   }
-}
+};
 
-async function checkInventoryForInvoice(lineItems) {
+// Check Inventory for Invoice
+const checkInventoryForInvoice = async (lineItems) => {
   let isFulfillable = true;
 
   for (const item of lineItems) {
@@ -133,12 +129,10 @@ async function checkInventoryForInvoice(lineItems) {
     if (gap > 0) {
       isFulfillable = false;
 
-      // Determine impact based on gap size
       let impact = "Low";
       if (gap > 5) impact = "Medium";
       if (gap > 10) impact = "High";
 
-      // Update shortage details in Inventory
       await Inventory.updateOne(
         { sku: item.sku },
         {
@@ -154,34 +148,32 @@ async function checkInventoryForInvoice(lineItems) {
   }
 
   return isFulfillable;
-}
+};
 
+// Analyze Email for Invoice
 const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
-    try {
-        // Check for obvious invoice indicators before making API call
-        const lowerSubject = subject.toLowerCase();
-        const lowerBody = emailBody.toLowerCase();
-        
-        const quickChecks = {
-            hasInvoiceKeyword: lowerSubject.includes('invoice') || lowerBody.includes('invoice'),
-            hasAmount: /\$\d+/.test(emailBody),
-            hasInvoiceNumber: /invoice\s*#?\s*\d+/i.test(emailBody),
-            hasDueDate: /due\s*date/i.test(emailBody)
-        };
+  try {
+    const lowerSubject = subject.toLowerCase();
+    const lowerBody = emailBody.toLowerCase();
 
-        // If multiple indicators are present, return early
-        if (Object.values(quickChecks).filter(Boolean).length >= 2) {
-            return { 
-                is_invoice: true, 
-                reason: "Multiple invoice indicators found in email content" 
-            };
-        }
+    const quickChecks = {
+      hasInvoiceKeyword: lowerSubject.includes('invoice') || lowerBody.includes('invoice'),
+      hasAmount: /\$\d+/.test(emailBody),
+      hasInvoiceNumber: /invoice\s*#?\s*\d+/i.test(emailBody),
+      hasDueDate: /due\s*date/i.test(emailBody),
+    };
 
-        // Make API call for more complex analysis
-        const chatCompletion = await groq.chat.completions.create({
-            messages: [{
-                role: "user",
-                content: `Analyze this email to determine if it contains an invoice. Respond in JSON format with:
+    if (Object.values(quickChecks).filter(Boolean).length >= 2) {
+      return { 
+        is_invoice: true, 
+        reason: "Multiple invoice indicators found in email content" 
+      };
+    }
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{
+        role: "user",
+        content: `Analyze this email to determine if it contains an invoice. Respond in JSON format with:
                 - "is_invoice": true or false
                 - "reason": Explanation
                 - "confidence_score": 0-100
@@ -189,41 +181,66 @@ const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
                 **Email Data:**
                 - Subject: "${subject}"
                 - Headers: ${JSON.stringify(headers)}
-                - Body: "${emailBody}"`
-            }],
-            model: "mixtral-8x7b-32768",
-            response_format: { type: "json_object" },
-            temperature: 0.3 // Lower temperature for more deterministic responses
-        });
+                - Body: "${emailBody}"`,
+      }],
+      model: "mixtral-8x7b-32768",
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+    });
 
-        const result = JSON.parse(chatCompletion.choices[0].message.content);
+    const result = JSON.parse(chatCompletion.choices[0].message.content);
 
-        // Log the analysis result
-        await EmailLog.create({
-            emailSubject: subject,
-            analysisResult: result,
-            timestamp: new Date()
-        });
+    await EmailLog.create({
+      emailSubject: subject,
+      analysisResult: result,
+      timestamp: new Date(),
+    });
 
-        return result;
-
-    } catch (error) {
-        console.error("Error analyzing email for invoice:", error);
-        await EmailLog.create({
-            emailSubject: subject,
-            analysisResult: { is_invoice: false, reason: "API Error" },
-            timestamp: new Date(),
-            error: error.message
-        });
-        return { 
-            is_invoice: false, 
-            reason: "Error in processing AI response.",
-            confidence_score: 0
-        };
-    }
+    return result;
+  } catch (error) {
+    console.error("Error analyzing email for invoice:", error);
+    await EmailLog.create({
+      emailSubject: subject,
+      analysisResult: { is_invoice: false, reason: "API Error" },
+      timestamp: new Date(),
+      error: error.message,
+    });
+    return { 
+      is_invoice: false, 
+      reason: "Error in processing AI response.",
+      confidence_score: 0,
+    };
+  }
 };
 
-//manual approval/reject function
+// Manually Update Invoice Status
+const manuallyUpdateInvoiceStatus = async (invoiceId, action) => {
+  try {
+    if (!["Approved", "Rejected"].includes(action)) {
+      throw new Error("Invalid action. Use 'Approved' or 'Rejected'.");
+    }
+
+    const invoice = await Invoice.findById(invoiceId);
+    if (!invoice) {
+      throw new Error("Invoice not found.");
+    }
+
+    invoice.invoice_status = action;
+    await invoice.save();
+
+    return { 
+      success: true, 
+      message: `Invoice ${action} successfully.`, 
+      invoice,
+    };
+  } catch (error) {
+    console.error("Error updating invoice status:", error);
+    return { 
+      success: false, 
+      message: error.message,
+    };
+  }
+};
 
 //invoice by id
 
@@ -234,5 +251,6 @@ const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
 module.exports = {
   processInvoice,
   checkInventoryForInvoice,
-  analyzeEmailForInvoice
+  analyzeEmailForInvoice,
+  manuallyUpdateInvoiceStatus
 };
