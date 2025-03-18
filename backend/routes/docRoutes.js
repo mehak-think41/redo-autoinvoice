@@ -11,3 +11,6 @@ router.post('/', docController.processInvoice);
 router.get('/', docController.getAllInvoices);
 router.get('/:id', docController.getInvoiceById);
 router.post('/update-status', docController.manuallyUpdateInvoiceStatus);
+router.get('/stats/monthly', docController.getMonthlyInvoiceStats);
+
+module.exports = router;
