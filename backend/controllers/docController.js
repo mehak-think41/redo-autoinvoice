@@ -243,6 +243,23 @@ const manuallyUpdateInvoiceStatus = async (invoiceId, action) => {
 };
 
 //invoice by id
+const getInvoiceById = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id; // Extract user ID from authenticated request
+  
+      const invoice = await Invoice.findOne({ _id: id, userId });
+  
+      if (!invoice) {
+        return res.status(404).json({ success: false, message: "Invoice not found or access denied." });
+      }
+  
+      res.status(200).json({ success: true, invoice });
+    } catch (error) {
+      console.error("Error fetching invoice by ID:", error);
+      res.status(500).json({ success: false, message: "Internal server error." });
+    }
+  };
 
 //get all invoices list with filters(processed, pending, flagged)
 
