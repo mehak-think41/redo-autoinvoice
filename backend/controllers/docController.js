@@ -246,7 +246,7 @@ const manuallyUpdateInvoiceStatus = async (invoiceId, action) => {
 const getInvoiceById = async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = req.user.id; // Extract user ID from authenticated request
+      const userId = req.user._id; // Extract user ID from authenticated request
   
       const invoice = await Invoice.findOne({ _id: id, userId });
   
@@ -262,6 +262,29 @@ const getInvoiceById = async (req, res) => {
   };
 
 //get all invoices list with filters(processed, pending, flagged)
+const getAllInvoices = async (req, res) => {
+    try {
+        const userId = req.user._id; // Extract user ID from authenticated request
+        const { status } = req.query; // Get status filter from query params
+
+        const validStatuses = ["Approved", "Pending", "Flagged", "Rejected"];
+        let filter = { userId };
+
+        if (status && validStatuses.includes(status)) {
+            filter.invoice_status = status;
+        }
+
+        const invoices = await Invoice.find(filter).sort({ created_at: -1 });
+
+        res.status(200).json({
+            success: true,
+            invoices,
+        });
+    } catch (error) {
+        console.error("Error fetching invoices:", error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
 
 //total invoices, pending invoices, approved invoices, flagged invoices in past month
 
@@ -270,5 +293,6 @@ module.exports = {
   checkInventoryForInvoice,
   analyzeEmailForInvoice,
   manuallyUpdateInvoiceStatus,
-  getInvoiceById
+  getInvoiceById,
+  getAllInvoices
 };

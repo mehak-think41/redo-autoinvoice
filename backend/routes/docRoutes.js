@@ -8,6 +8,6 @@ router.use(auth);
 
 // CRUD routes
 router.post('/', docController.processInvoice);
-// router.get('/', docController.getAllInvoices);
+router.get('/', docController.getAllInvoices);
 router.get('/:id', docController.getInvoiceById);
 router.post('/update-status', docController.manuallyUpdateInvoiceStatus);
