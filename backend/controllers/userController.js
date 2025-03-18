@@ -3,7 +3,7 @@ const googleAuthService = require('../services/googleAuthService');
 const EmailLog = require('../models/EmailLog'); // Import the schema
 const { google } = require('googleapis');
 const GoogleToken = require('../models/GoogleToken');
-const { processInvoice } = require('./docController');
+const { processInvoice, analyzeEmailForInvoice } = require('./docController');
 
 const AWS = require('aws-sdk');
 
@@ -85,13 +85,36 @@ const getGmailInboxLive = async (req, res) => {
       console.warn('No email content found.');
       return;
     }
-    let emailBody = '';
 
     const headers = fullEmail.payload.headers;
     const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
     const date = headers.find(h => h.name === 'Date')?.value || 'Unknown Date';
 
-    //write logic to identify invoices only
+    let emailBody = '';
+
+    // Fetch raw email content
+    const rawEmail = await gmail.users.messages.get({
+      userId: 'me',
+      id: fullEmail.id,
+      format: 'raw',
+    });
+
+    if (rawEmail.data.raw) {
+      emailBody = Buffer.from(rawEmail.data.raw, 'base64').toString('utf-8');
+    }
+
+    // Fallback if raw email is empty
+    if (!emailBody.trim()) {
+      emailBody = fullEmail.snippet;
+    }
+
+    // ✅ Now, call analyzeEmailForInvoice with the actual email body
+    const analysisResult = await analyzeEmailForInvoice(subject, headers, emailBody);
+
+    if (!analysisResult.is_invoice || analysisResult.confidence_score < 50) {
+      console.log(`Skipping non-invoice email: ${analysisResult.reason}`);
+      return;
+    }
 
     const attachments = [];
     if (fullEmail.payload.parts) {
@@ -107,7 +130,7 @@ const getGmailInboxLive = async (req, res) => {
     }
 
     let s3Links = [];
-    userID = user._id
+    userID = user._id;
 
     let tokenRecord = await GoogleToken.findOne({ userId: userID });
 
@@ -124,7 +147,6 @@ const getGmailInboxLive = async (req, res) => {
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     if (attachments.length > 0) {
-
       for (const attachment of attachments) {
         const attachmentData = await gmail.users.messages.attachments.get({
           userId: 'me',
@@ -137,33 +159,17 @@ const getGmailInboxLive = async (req, res) => {
         const s3Key = `gmail_attachments/${Date.now()}_${attachment.filename}`;
 
         const params = {
-          Bucket: 'demo-auto-invoice', // Your S3 bucket name
-          Key: s3Key, // File path in S3
+          Bucket: 'demo-auto-invoice',
+          Key: s3Key,
           Body: fileBuffer,
           ContentType: attachment.mimeType,
         };
 
         const uploadResult = await s3.upload(params).promise();
-        // Save S3 link
         s3Links.push({ filename: attachment.filename, url: uploadResult.Location });
       }
     } else {
       console.log('No attachments found.');
-    }
-
-    const rawEmail = await gmail.users.messages.get({
-      userId: 'me',
-      id: fullEmail.id,
-      format: 'raw',
-    });
-
-    if (rawEmail.data.raw) {
-      const decodedRawEmail = Buffer.from(rawEmail.data.raw, 'base64').toString('utf-8');
-      emailBody = decodedRawEmail;
-    }
-
-    if (emailBody == "" || emailBody == " " || emailBody == null) {
-      emailBody = fullEmail.snippet
     }
 
     // Save email data and S3 links in MongoDB
@@ -179,14 +185,14 @@ const getGmailInboxLive = async (req, res) => {
     await emailRecord.save();
     console.log('Email data and attachments saved to database.');
 
-    // supports only single file, update it
-    const result = await processInvoice(s3Links[0].url, user._id, emailRecord._id);
-
+    // Supports only single file, update it
+    const result = await processInvoice(s3Links[0]?.url, user._id, emailRecord._id);
 
   } catch (error) {
     console.error('Error handling Gmail webhook:', error);
   }
 };
+
 
 module.exports = {
   getGmailInbox,
