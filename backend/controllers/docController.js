@@ -252,5 +252,6 @@ module.exports = {
   processInvoice,
   checkInventoryForInvoice,
   analyzeEmailForInvoice,
-  manuallyUpdateInvoiceStatus
+  manuallyUpdateInvoiceStatus,
+  getInvoiceById
 };

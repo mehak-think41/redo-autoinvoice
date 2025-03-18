@@ -9,6 +9,16 @@ const lineItemSchema = new mongoose.Schema({
 });
 
 const invoiceSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    emailRecordId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'EmailLog',
+        required: true
+    },
     invoice_number: { type: String, unique: true, required: true },
     date: { type: Date, required: true },
     customer_details: { 

@@ -8,6 +8,11 @@ const shortageSchema = new mongoose.Schema({
 });
 
 const inventorySchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     sku: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     quantity: { type: Number, required: true, min: 0 },
