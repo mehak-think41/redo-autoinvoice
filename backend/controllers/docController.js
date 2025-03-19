@@ -99,6 +99,7 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
       created_at: new Date(),
       userId,
       emailRecordId,
+      pdf_url: pdfUrl,
     });
 
     const savedInvoice = await invoice.save();

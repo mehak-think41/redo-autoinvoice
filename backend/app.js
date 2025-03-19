@@ -61,7 +61,7 @@ app.listen(PORT, async () => {
     const listener = await forward({
       addr: PORT,
       domain: process.env.NGROK_DOMAIN,
-      authtoken: process.env.NGROK_AUTH_TOKEN
+      authtoken: process.env.NGROK_AUTHTOKEN
     });
     console.log(`✅ Ingress established at: ${listener.url()}`);
   } catch (e) {

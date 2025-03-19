@@ -4,10 +4,7 @@ import { useState, useEffect } from "react"
 import { FaGoogle } from "react-icons/fa"
 import { FileText, CheckSquare, BarChart2, Play, ArrowRight, ChevronDown } from "lucide-react"
 import { useRouter } from "next/navigation"
-import Lottie from "react-lottie-player"
 import { useToast } from "../../hooks/use-toast"
-import invoiceAnimationData from "../../assets/invoice-animation.json"
-import dashboardAnimationData from "../../assets/dashboard-animation.json"
 import Image from 'next/image';
 import heroImage from '@/assets/2.jpg';
 import howItWorksImage from '@/assets/Untitled design.png';
@@ -21,13 +18,8 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
+  // Handle scroll events
   useEffect(() => {
-    // Check if user is already logged in
-    if (isAuthenticated && !authLoading) {
-      router.push("/dashboard")
-    }
-
-    // Add scroll event listener
     const handleScroll = () => {
       if (window.scrollY > 50) {
         setScrolled(true)
@@ -38,7 +30,13 @@ const LoginPage = () => {
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [router, isAuthenticated, authLoading])
+  }, [])
+
+  // Handle authentication and redirect
+  if (isAuthenticated && !authLoading) {
+    // Redirect to dashboard
+    router.push("/dashboard");
+  }
 
   const handleGoogleLogin = async () => {
     setLoading(true)

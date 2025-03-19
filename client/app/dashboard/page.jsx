@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -17,8 +18,32 @@ import {
 } from "recharts"
 import { FileText, CheckSquare, AlertTriangle } from "lucide-react"
 import { recentInvoices, processedInvoices, pendingInvoices } from "@/data/mockData"
+import { watchLive } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Dashboard() {
+  const { toast } = useToast()
+  const [watchLiveCalled, setWatchLiveCalled] = useState(false)
+  
+  // Call watchLive API when dashboard loads
+  useEffect(() => {
+    const callWatchLiveAPI = async () => {
+      if (watchLiveCalled) return; // Prevent multiple calls
+      
+      try {
+        console.log("Calling watchLive API from dashboard...");
+        const message = await watchLive();
+        console.log("WatchLive API response:", message);
+        setWatchLiveCalled(true);
+      } catch (error) {
+        console.error("Failed to call watchLive API:", error);
+        setWatchLiveCalled(true); // Still mark as called to prevent infinite loops
+      }
+    };
+    
+    callWatchLiveAPI();
+  }, [watchLiveCalled]);
+
   // Calculate statistics from mock data
   const totalInvoices = recentInvoices.length + processedInvoices.length + pendingInvoices.length
   const processedCount = processedInvoices.length

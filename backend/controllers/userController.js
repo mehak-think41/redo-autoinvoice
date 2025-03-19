@@ -90,6 +90,22 @@ const getGmailInboxLive = async (req, res) => {
     const subject = headers.find(h => h.name === 'Subject')?.value || 'No Subject';
     const date = headers.find(h => h.name === 'Date')?.value || 'Unknown Date';
 
+    userID = user._id;
+
+    let tokenRecord = await GoogleToken.findOne({ userId: userID });
+
+    if (!tokenRecord) throw new Error('No Google token found for this user');
+
+    if (new Date() >= tokenRecord.expiresAt) {
+      if (!tokenRecord.refreshToken) throw new Error('Google session expired, please login again');
+      await refreshGoogleToken(userID);
+      tokenRecord = await GoogleToken.findOne({ userId: userID });
+    }
+    
+    const oauth2Client = getOAuth2Client();
+    oauth2Client.setCredentials({ access_token: tokenRecord.accessToken });
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
     let emailBody = '';
 
     // Fetch raw email content
@@ -130,21 +146,7 @@ const getGmailInboxLive = async (req, res) => {
     }
 
     let s3Links = [];
-    userID = user._id;
 
-    let tokenRecord = await GoogleToken.findOne({ userId: userID });
-
-    if (!tokenRecord) throw new Error('No Google token found for this user');
-
-    if (new Date() >= tokenRecord.expiresAt) {
-      if (!tokenRecord.refreshToken) throw new Error('Google session expired, please login again');
-      await refreshGoogleToken(userID);
-      tokenRecord = await GoogleToken.findOne({ userId: userID });
-    }
-
-    const oauth2Client = getOAuth2Client();
-    oauth2Client.setCredentials({ access_token: tokenRecord.accessToken });
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
     if (attachments.length > 0) {
       for (const attachment of attachments) {

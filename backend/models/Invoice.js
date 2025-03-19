@@ -46,6 +46,8 @@ const invoiceSchema = new mongoose.Schema({
     line_items: [lineItemSchema], // List of products
 
     notes: String,
+
+    pdf_url: { type: String, required: true },
     
     created_at: { type: Date, default: Date.now }
 });

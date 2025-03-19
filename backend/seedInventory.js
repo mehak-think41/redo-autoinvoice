@@ -17,7 +17,7 @@ async function seedDatabase() {
     console.log('Cleared existing inventory data');
 
     // Add the user ID to each inventory item
-    const userId = '67da5f72f1c0155c9333c928'; // Replace with the actual user ID
+    const userId = '67dafd043c581ba35a7a23ab'; // Replace with the actual user ID
     const inventoryWithUserId = inventory.map((item) => ({
       ...item,
       userId,

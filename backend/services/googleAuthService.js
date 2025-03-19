@@ -268,7 +268,7 @@ const fetchFullEmail = async (userId, historyId) => {
         return emailDetails.data;
 
     } catch (error) {
-        console.error('Error fetching email:', error.message);
+        console.error('Error fetching email:', error);
         throw new Error('Failed to fetch email details');
     }
 };

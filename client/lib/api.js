@@ -53,6 +53,17 @@ export const getCurrentUser = async () => {
   }
 };
 
+// Watch live - call the watchlive endpoint
+export const watchLive = async () => {
+  try {
+    const response = await api.post("/users/watchlive");
+    return response.data.message;
+  } catch (error) {
+    console.error("Error calling watchlive:", error);
+    throw error;
+  }
+};
+
 // Logout
 export const logout = async () => {
   try {
