@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { getMonthlyInvoiceStats } from "@/lib/api"
+import { getMonthlyInvoiceStats, watchLive } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, AlertTriangle, XCircle, Clock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,33 +22,53 @@ import {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null)
+  const [watchLiveCalled, setWatchLiveCalled] = useState(false)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getMonthlyInvoiceStats()
-        console.log('API Response:', response)
+        // Call watchLive API if not already called
+        if (!watchLiveCalled) {
+          console.log("Calling watchLive API from dashboard...");
+          const watchLiveMessage = await watchLive();
+          console.log("WatchLive API response:", watchLiveMessage);
+          if (watchLiveMessage?.success) {
+            toast({
+              title: "Success",
+              description: "Live monitoring initialized successfully",
+              variant: "default",
+            });
+          }
+          setWatchLiveCalled(true);
+        }
+
+        // Fetch monthly stats
+        const response = await getMonthlyInvoiceStats();
         if (response.success && response.stats) {
-          setStats(response.stats)
+          setStats(response.stats);
         } else {
-          throw new Error('Invalid response format')
+          toast({
+            title: "Warning",
+            description: "Unable to fetch monthly statistics",
+            variant: "destructive",
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch monthly stats:", error)
+        console.error("Dashboard API error:", error);
         toast({
           title: "Error",
-          description: "Failed to load monthly statistics.",
+          description: error.message || "Failed to load dashboard data",
           variant: "destructive",
-        })
+        });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchStats()
-  }, [toast])
+    fetchData();
+  }, [toast]);
 
   if (loading) {
     return (
