@@ -1,0 +1,64 @@
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:5000/api";
+
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true, // Important for cookies
+});
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error("API Request Error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log(`API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
+  (error) => {
+    console.error("API Response Error:", error.response || error);
+    return Promise.reject(error);
+  }
+);
+
+// Get Google authentication URL
+export const getGoogleAuthUrl = async () => {
+  try {
+    const response = await api.get("/auth/google/url");
+    return response.data.url;
+  } catch (error) {
+    console.error("Error getting Google auth URL:", error);
+    throw error;
+  }
+};
+
+// Get current user
+export const getCurrentUser = async () => {
+  try {
+    const response = await api.get("/auth/me");
+    return response.data.user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    throw error;
+  }
+};
+
+// Logout
+export const logout = async () => {
+  try {
+    await api.post("/auth/logout");
+  } catch (error) {
+    console.error("Error during logout:", error);
+    throw error;
+  }
+};

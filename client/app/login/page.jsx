@@ -11,17 +11,19 @@ import dashboardAnimationData from "../../assets/dashboard-animation.json"
 import Image from 'next/image';
 import heroImage from '@/assets/2.jpg';
 import howItWorksImage from '@/assets/Untitled design.png';
+import { useAuth } from "@/context/AuthContext"
+import { getGoogleAuthUrl } from "@/lib/api"
 
 const LoginPage = () => {
   const router = useRouter()
   const { toast } = useToast()
+  const { isAuthenticated, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     // Check if user is already logged in
-    const isAuth = localStorage.getItem("isAuth") === "true"
-    if (isAuth) {
+    if (isAuthenticated && !authLoading) {
       router.push("/dashboard")
     }
 
@@ -36,29 +38,26 @@ const LoginPage = () => {
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [router])
+  }, [router, isAuthenticated, authLoading])
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true)
-
-    // Simulate Google OAuth
-    setTimeout(() => {
-      localStorage.setItem("isAuth", "true")
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          name: "John Doe",
-          email: "john.doe@example.com",
-          avatar: "/avatar.png",
-        }),
-      )
-      setLoading(false)
+    
+    try {
+      // Get Google authentication URL from the backend
+      const url = await getGoogleAuthUrl()
+      
+      // Redirect to Google authentication page
+      window.location.href = url
+    } catch (error) {
+      console.error("Failed to get Google authentication URL:", error)
       toast({
-        title: "Success",
-        description: "Login with Google successful!"
+        title: "Error",
+        description: "Failed to initiate Google login. Please try again.",
+        variant: "destructive"
       })
-      router.push("/dashboard")
-    }, 1000)
+      setLoading(false)
+    }
   }
 
   const features = [

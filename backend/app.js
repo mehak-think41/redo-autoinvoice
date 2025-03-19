@@ -19,10 +19,21 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser()); // Add cookie parser middleware
+
+// Enhanced CORS configuration
 app.use(cors({
   origin: process.env.CLIENT_URL,
-  credentials: true // Allow cookies to be sent with requests
+  credentials: true, // Allow cookies to be sent with requests
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Cookies:', req.cookies);
+  next();
+});
 
 const GoogleToken = require('./models/GoogleToken');
 setInterval(async () => {
@@ -49,12 +60,11 @@ app.listen(PORT, async () => {
   try {
     const listener = await forward({
       addr: PORT,
-      authtoken_from_env: true,
       domain: process.env.NGROK_DOMAIN,
+      authtoken: process.env.NGROK_AUTH_TOKEN
     });
-    console.log(`🌍 Ngrok tunnel established at: ${listener.url()}`);
-
-  } catch (error) {
-    console.error("❌ Failed to establish ngrok tunnel:", error);
+    console.log(`✅ Ingress established at: ${listener.url()}`);
+  } catch (e) {
+    console.log(`⚠️ Ngrok error: ${e}`);
   }
 });

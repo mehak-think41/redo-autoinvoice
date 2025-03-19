@@ -36,20 +36,21 @@ const googleCallback = async (req, res) => {
         // Generate JWT for session
         const token = generateToken(user._id);
 
-        // Set the JWT as a cookie
+        // Set the JWT as a cookie with appropriate settings for cross-domain
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 1 week
+            sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cross-domain redirects
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+            path: '/' // Ensure cookie is available on all paths
         });
 
-        // Redirect user to frontend
-        res.redirect(`${process.env.CLIENT_URL}`);
+        // Redirect user to frontend dashboard directly
+        res.redirect(`${process.env.CLIENT_URL}/dashboard`);
 
     } catch (error) {
         console.error('Google callback error:', error);
-        res.status(400).json({ message: 'Google authentication failed', error: error.message });
+        res.redirect(`${process.env.CLIENT_URL}/login?error=${encodeURIComponent(error.message)}`);
     }
 };
 
@@ -77,7 +78,12 @@ const getCurrentUser = async (req, res) => {
 
 //enhance logout function(delete google token from db)
 const logout = (req, res) => {
-    res.clearCookie('token');
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/'
+    });
     res.json({ success: true, message: 'Logged out successfully' });
 };
 

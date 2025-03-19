@@ -5,33 +5,67 @@ import { useRouter, usePathname } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { FileText, CheckSquare, Mail, Package, BarChart2, Play, User, LogOut, Home } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 export default function DashboardLayout({ children }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = useState(null)
+  const { user, isAuthenticated, loading, logout } = useAuth()
   const [mounted, setMounted] = useState(false)
+
+  // Debug authentication state
+  useEffect(() => {
+    console.log("Dashboard Layout - Auth State:", { isAuthenticated, loading, user })
+  }, [isAuthenticated, loading, user])
 
   useEffect(() => {
     setMounted(true)
-    const isAuth = localStorage.getItem("isAuth") === "true"
-    const userData = localStorage.getItem("user")
-
-    if (!isAuth) {
+    
+    // If authentication check is complete and user is not authenticated, redirect to login
+    if (!loading && !isAuthenticated) {
+      console.log("Not authenticated, redirecting to login")
       router.push("/login")
-    } else if (userData) {
-      setUser(JSON.parse(userData))
     }
-  }, [router])
+  }, [router, isAuthenticated, loading])
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAuth")
-    localStorage.removeItem("user")
-    router.push("/login")
+  // Handle logout using the auth context
+  const handleLogout = async () => {
+    await logout()
   }
 
-  if (!mounted || !user) {
-    return null
+  // Don't render anything until client-side hydration is complete
+  // or while authentication is being checked
+  if (!mounted || loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+      </div>
+    )
+  }
+
+  // If not authenticated after loading, don't render the dashboard
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
+          <p className="mb-4">You need to be logged in to access this page.</p>
+          <Button onClick={() => router.push("/login")}>Go to Login</Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Ensure user data is available
+  if (!user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Loading User Data</h2>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mx-auto"></div>
+        </div>
+      </div>
+    )
   }
 
   const navigation = [
@@ -80,12 +114,12 @@ export default function DashboardLayout({ children }) {
         <div className="absolute bottom-0 w-64 border-t p-4">
           <Button variant="ghost" className="w-full flex items-center justify-start gap-2" onClick={handleLogout}>
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.picture} alt={user.name} />
+              <AvatarFallback>{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start text-sm">
-              <span className="font-medium">{user.name}</span>
-              <span className="text-xs text-muted-foreground">{user.email}</span>
+              <span className="font-medium">{user.name || 'User'}</span>
+              <span className="text-xs text-muted-foreground">{user.email || 'user@example.com'}</span>
             </div>
           </Button>
         </div>

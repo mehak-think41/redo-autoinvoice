@@ -1,6 +1,7 @@
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "react-hot-toast"
+import { AuthProvider } from "@/context/AuthContext"
 
 // Remove Google Font import and use system fonts instead
 // const inter = Inter({ subsets: ["latin"] })
@@ -16,8 +17,10 @@ export default function RootLayout({ children }) {
     <html lang="en" className="h-full">
       <body className="font-sans h-full w-full m-0 p-0">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Toaster position="top-right" />
-          <div className="h-full w-full">{children}</div>
+          <AuthProvider>
+            <Toaster position="top-right" />
+            <div className="h-full w-full">{children}</div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
