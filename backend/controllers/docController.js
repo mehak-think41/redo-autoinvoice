@@ -130,39 +130,34 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
 
 // Check Inventory for Invoice
 const checkInventoryForInvoice = async (lineItems, userId) => {
-  for (const item of lineItems) {
-    const inventoryItem = await Inventory.findOne({ sku: item.sku, userId });
-
-    if (!inventoryItem) {
-      throw new Error(
-        `Inventory item with SKU ${item.sku} is missing. Process halted.`
-      );
+    for (const item of lineItems) {
+      const inventoryItem = await Inventory.findOne({ sku: item.sku, userId });
+      if (!inventoryItem) {
+        throw new Error(`Inventory item with SKU ${item.sku} is missing. Process halted.`);
+      }
+      const actualStock = inventoryItem.quantity;
+      const gap = item.quantity - actualStock;
+      if (gap > 0) {
+        let impact = "Low";
+        if (gap > 5) impact = "Medium";
+        if (gap > 10) impact = "High";
+        // Update shortage details (if desired) before returning false
+        await Inventory.updateOne(
+          { sku: item.sku, userId },
+          {
+            shortages: {
+              expected: item.quantity,
+              actual: actualStock,
+              gap,
+              impact,
+            },
+          }
+        );
+        return false; // Not enough inventory for this item
+      }
     }
-
-    const actualStock = inventoryItem.quantity;
-    const gap = item.quantity - actualStock;
-
-    if (gap > 0) {
-      let impact = "Low";
-      if (gap > 5) impact = "Medium";
-      if (gap > 10) impact = "High";
-
-      await Inventory.updateOne(
-        { sku: item.sku, userId },
-        {
-          shortages: {
-            expected: item.quantity,
-            actual: actualStock,
-            gap,
-            impact,
-          },
-        }
-      );
-    }
-  }
-
-  return true;
-};
+    return true;
+  };  
 
 // Analyze Email for Invoice
 const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
@@ -232,32 +227,48 @@ const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
 
 // Manually Update Invoice Status
 const manuallyUpdateInvoiceStatus = async (invoiceId, action) => {
-  try {
-    if (!["Approved", "Rejected"].includes(action)) {
-      throw new Error("Invalid action. Use 'Approved' or 'Rejected'.");
+    try {
+      if (!["Approved", "Rejected"].includes(action)) {
+        throw new Error("Invalid action. Use 'Approved' or 'Rejected'.");
+      }
+  
+      const invoice = await Invoice.findById(invoiceId);
+      if (!invoice) {
+        throw new Error("Invoice not found.");
+      }
+  
+      // If the user is trying to approve the invoice, first check if inventory is sufficient
+      if (action === "Approved") {
+        const isSufficient = await checkInventoryForInvoice(invoice.line_items, invoice.userId);
+        if (!isSufficient) {
+          throw new Error("Inventory is not enough to fulfill the order.");
+        }
+        // If inventory is sufficient, update the inventory for each line item
+        for (const item of invoice.line_items) {
+          await Inventory.updateOne(
+            { sku: item.sku, userId: invoice.userId },
+            { $inc: { quantity: -item.quantity } }
+          );
+        }
+      }
+  
+      // Update the invoice status to the requested action
+      invoice.invoice_status = action;
+      await invoice.save();
+  
+      return {
+        success: true,
+        message: `Invoice ${action} successfully.`,
+        invoice,
+      };
+    } catch (error) {
+      console.error("Error updating invoice status:", error);
+      return {
+        success: false,
+        message: error.message,
+      };
     }
-
-    const invoice = await Invoice.findById(invoiceId);
-    if (!invoice) {
-      throw new Error("Invoice not found.");
-    }
-
-    invoice.invoice_status = action;
-    await invoice.save();
-
-    return {
-      success: true,
-      message: `Invoice ${action} successfully.`,
-      invoice,
-    };
-  } catch (error) {
-    console.error("Error updating invoice status:", error);
-    return {
-      success: false,
-      message: error.message,
-    };
-  }
-};
+  };  
 
 //invoice by id
 const getInvoiceById = async (req, res) => {
