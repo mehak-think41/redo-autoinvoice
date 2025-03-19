@@ -16,8 +16,15 @@ async function seedDatabase() {
     await Inventory.deleteMany({});
     console.log('Cleared existing inventory data');
 
-    // Insert mock data
-    const result = await Inventory.insertMany(inventory);
+    // Add the user ID to each inventory item
+    const userId = '67da5f72f1c0155c9333c928'; // Replace with the actual user ID
+    const inventoryWithUserId = inventory.map((item) => ({
+      ...item,
+      userId,
+    }));
+
+    // Insert mock data with user ID
+    const result = await Inventory.insertMany(inventoryWithUserId);
     console.log(`Successfully inserted ${result.length} inventory items`);
 
     // Close the connection

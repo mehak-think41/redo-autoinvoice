@@ -5,6 +5,7 @@ const createInventory = async (req, res) => {
   try {
     const inventoryData = {
       ...req.body,
+      userId: req.user.id, // Ensure inventory is linked to the authenticated user
       LastUpdated: Date.now()
     };
     const inventory = await Inventory.create(inventoryData);
@@ -17,7 +18,7 @@ const createInventory = async (req, res) => {
 // Read All
 const getAllInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.find();
+    const inventory = await Inventory.find({ userId: req.user.id });
     res.json(inventory);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -27,7 +28,7 @@ const getAllInventory = async (req, res) => {
 // Read One
 const getInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.findById(req.params.id);
+    const inventory = await Inventory.findOne({ _id: req.params.id, userId: req.user.id });
     if (!inventory) return res.status(404).json({ error: 'Inventory not found' });
     res.json(inventory);
   } catch (error) {
@@ -42,8 +43,8 @@ const updateInventory = async (req, res) => {
         ...req.body,
         LastUpdated: Date.now()
       };
-      const inventory = await Inventory.findByIdAndUpdate(
-        req.params.id,
+      const inventory = await Inventory.findOneAndUpdate(
+        { _id: req.params.id, userId: req.user.id },
         updateData,
         { new: true }
       );
@@ -52,12 +53,12 @@ const updateInventory = async (req, res) => {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  };
+};
 
 // Delete
 const deleteInventory = async (req, res) => {
   try {
-    const inventory = await Inventory.findByIdAndDelete(req.params.id);
+    const inventory = await Inventory.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
     if (!inventory) return res.status(404).json({ error: 'Inventory not found' });
     res.json({ message: 'Inventory deleted successfully' });
   } catch (error) {
@@ -65,9 +66,10 @@ const deleteInventory = async (req, res) => {
   }
 };
 
-async function getGapAnalysis(req, res) {
+// GAP Analysis
+const getGapAnalysis = async (req, res) => {
     try {
-        const inventoryItems = await Inventory.find();
+        const inventoryItems = await Inventory.find({ userId: req.user.id });
         
         const gapAnalysis = inventoryItems
             .filter(item => item.shortages)
@@ -104,12 +106,15 @@ async function getGapAnalysis(req, res) {
             error: error.message 
         });
     }
-}
+};
 
-async function getInventoryShortages(req, res) {
+// Inventory Shortages
+const getInventoryShortages = async (req, res) => {
     try {
         const { category } = req.query;
-        const query = category ? { name: category, 'shortages.gap': { $gt: 0 } } : { 'shortages.gap': { $gt: 0 } };
+        const query = category 
+            ? { userId: req.user.id, name: category, 'shortages.gap': { $gt: 0 } } 
+            : { userId: req.user.id, 'shortages.gap': { $gt: 0 } };
         const shortages = await Inventory.find(query, {
             sku: 1,
             name: 1,
@@ -123,7 +128,7 @@ async function getInventoryShortages(req, res) {
             error: error.message 
         });
     }
-}
+};
 
 module.exports = {
   createInventory,
