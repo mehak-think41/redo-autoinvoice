@@ -297,28 +297,30 @@ const getInvoiceById = async (req, res) => {
 
 //get all invoices list with filters(processed, pending, flagged)
 const getAllInvoices = async (req, res) => {
-  try {
-    const userId = req.user._id; // Extract user ID from authenticated request
-    const { status } = req.query; // Get status filter from query params
-
-    const validStatuses = ["Approved", "Pending", "Flagged", "Rejected"];
-    let filter = { userId };
-
-    if (status && validStatuses.includes(status)) {
-      filter.invoice_status = status;
+    try {
+      const userId = req.user._id;
+      const { status } = req.query;
+  
+      const validStatuses = ["Approved", "Pending", "Flagged", "Rejected"];
+      let filter = { userId };
+  
+      if (status && validStatuses.includes(status)) {
+        filter.invoice_status = status;
+      }
+  
+      const invoices = await Invoice.find(filter)
+        .sort({ created_at: -1 })
+        .select('invoice_number customer_details.email created_at total');
+  
+      res.status(200).json({
+        success: true,
+        invoices,
+      });
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ success: false, message: "Internal server error." });
     }
-
-    const invoices = await Invoice.find(filter).sort({ created_at: -1 });
-
-    res.status(200).json({
-      success: true,
-      invoices,
-    });
-  } catch (error) {
-    console.error("Error fetching invoices:", error);
-    res.status(500).json({ success: false, message: "Internal server error." });
-  }
-};
+  };
 
 /**
  * Returns invoice stats for the past month:

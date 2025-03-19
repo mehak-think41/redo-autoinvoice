@@ -73,3 +73,8 @@ export const logout = async () => {
     throw error;
   }
 };
+
+export const getProcessedInvoices = async () => {
+  const response = await api.get("/doc?status=Approved");
+  return response.data;
+};

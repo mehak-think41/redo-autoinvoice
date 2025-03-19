@@ -47,7 +47,7 @@ app.use('/h', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-// app.use('/api/doc', docRoutes)
+app.use('/api/doc', docRoutes);
 app.use('/api/inventory', inventoryRoutes);
 
 app.use(errorHandler);
