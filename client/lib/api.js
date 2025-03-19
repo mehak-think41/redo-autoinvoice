@@ -79,6 +79,11 @@ export const getProcessedInvoices = async () => {
   return response.data;
 };
 
+export const getPendingInvoices = async () => {
+  const response = await api.get(`/doc?status=Pending&status=Flagged`);
+  return response.data;
+};
+
 export const getInvoiceById = async (id) => {
   const response = await api.get(`/doc/${id}`);
   return response.data;

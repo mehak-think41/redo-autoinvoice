@@ -304,13 +304,15 @@ const getAllInvoices = async (req, res) => {
       const validStatuses = ["Approved", "Pending", "Flagged", "Rejected"];
       let filter = { userId };
   
-      if (status && validStatuses.includes(status)) {
-        filter.invoice_status = status;
+      // Handle multiple statuses
+      if (status) {
+        const statuses = Array.isArray(status) ? status : [status]; // Convert to array if not already
+        filter.invoice_status = { $in: statuses.filter(s => validStatuses.includes(s)) }; // Filter valid statuses
       }
   
       const invoices = await Invoice.find(filter)
         .sort({ created_at: -1 })
-        .select('invoice_number customer_details.email created_at total pdf_url');
+        .select('invoice_number customer_details.email created_at total pdf_url invoice_status');
   
       res.status(200).json({
         success: true,
