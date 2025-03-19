@@ -78,3 +78,8 @@ export const getProcessedInvoices = async () => {
   const response = await api.get("/doc?status=Approved");
   return response.data;
 };
+
+export const getInvoiceById = async (id) => {
+  const response = await api.get(`/doc/${id}`);
+  return response.data;
+};
