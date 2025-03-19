@@ -83,3 +83,8 @@ export const getInvoiceById = async (id) => {
   const response = await api.get(`/doc/${id}`);
   return response.data;
 };
+
+export const getMonthlyInvoiceStats = async () => {
+  const response = await api.get("/doc/stats/monthly");
+  return response.data;
+};

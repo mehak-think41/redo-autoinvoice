@@ -1,7 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { getMonthlyInvoiceStats } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
+import { CheckCircle, AlertTriangle, XCircle, Clock } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   BarChart,
@@ -16,106 +19,126 @@ import {
   Cell,
   Legend,
 } from "recharts"
-import { FileText, CheckSquare, AlertTriangle } from "lucide-react"
-import { recentInvoices, processedInvoices, pendingInvoices } from "@/data/mockData"
-import { watchLive } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
 
-export default function Dashboard() {
+export default function DashboardPage() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
-  const [watchLiveCalled, setWatchLiveCalled] = useState(false)
-  
-  // Call watchLive API when dashboard loads
+
   useEffect(() => {
-    const callWatchLiveAPI = async () => {
-      if (watchLiveCalled) return; // Prevent multiple calls
-      
+    const fetchStats = async () => {
       try {
-        console.log("Calling watchLive API from dashboard...");
-        const message = await watchLive();
-        console.log("WatchLive API response:", message);
-        setWatchLiveCalled(true);
+        const response = await getMonthlyInvoiceStats()
+        console.log('API Response:', response)
+        if (response.success && response.stats) {
+          setStats(response.stats)
+        } else {
+          throw new Error('Invalid response format')
+        }
       } catch (error) {
-        console.error("Failed to call watchLive API:", error);
-        setWatchLiveCalled(true); // Still mark as called to prevent infinite loops
+        console.error("Failed to fetch monthly stats:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load monthly statistics.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
       }
-    };
-    
-    callWatchLiveAPI();
-  }, [watchLiveCalled]);
-
-  // Calculate statistics from mock data
-  const totalInvoices = recentInvoices.length + processedInvoices.length + pendingInvoices.length
-  const processedCount = processedInvoices.length
-  const rejectedCount = recentInvoices.filter(invoice => invoice.status === 'rejected').length
-  const flaggedCount = pendingInvoices.filter(invoice => invoice.urgency === 'high').length
-
-  // Calculate monthly data from processed invoices
-  const monthlyData = processedInvoices.reduce((acc, invoice) => {
-    const month = new Date(invoice.date).toLocaleString('default', { month: 'short' })
-    const existingMonth = acc.find(item => item.name === month)
-    if (existingMonth) {
-      existingMonth.invoices++
-      existingMonth.amount += invoice.amount
-    } else {
-      acc.push({ name: month, invoices: 1, amount: invoice.amount })
     }
-    return acc
-  }, [])
 
-  // Invoice status data
-  const invoiceStatusData = [
-    { name: "Processed", value: processedCount, color: "#10b981" },
-    { name: "Rejected", value: rejectedCount, color: "#ef4444" },
-    { name: "Flagged", value: flaggedCount, color: "#6366f1" },
-  ]
+    fetchStats()
+  }, [toast])
 
-  const stats = [
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <p className="text-sm text-muted-foreground">Loading statistics...</p>
+      </div>
+    )
+  }
+
+  const statCards = [
     {
       title: "Total Invoices",
-      value: totalInvoices.toString(),
-      description: `${((processedCount / totalInvoices) * 100).toFixed(0)}% processed`,
-      icon: FileText,
-      color: "bg-blue-100 text-blue-700",
+      value: stats?.totalInvoices || 0,
+      description: "Total invoices this month",
+      icon: null,
     },
     {
-      title: "Processed",
-      value: processedCount.toString(),
-      description: `${((processedCount / totalInvoices) * 100).toFixed(0)}% completion rate`,
-      icon: CheckSquare,
-      color: "bg-green-100 text-green-700",
+      title: "Approved",
+      value: stats?.approved || 0,
+      percentage: stats?.approvedPercentage || 0,
+      description: "Approved invoices",
+      icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+    },
+    {
+      title: "Pending",
+      value: stats?.pending || 0,
+      percentage: stats?.pendingPercentage || 0,
+      description: "Awaiting review",
+      icon: <Clock className="h-4 w-4 text-yellow-500" />,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+    },
+    {
+      title: "Flagged",
+      value: stats?.flagged || 0,
+      percentage: stats?.flaggedPercentage || 0,
+      description: "Requires attention",
+      icon: <AlertTriangle className="h-4 w-4 text-red-500" />,
+      color: "text-red-600",
+      bgColor: "bg-red-50",
     },
     {
       title: "Rejected",
-      value: rejectedCount.toString(),
-      description: `${((rejectedCount / totalInvoices) * 100).toFixed(0)}% of total invoices`,
-      icon: AlertTriangle,
-      color: "bg-red-100 text-red-700",
+      value: stats?.rejected || 0,
+      percentage: stats?.rejectedPercentage || 0,
+      description: "Rejected invoices",
+      icon: <XCircle className="h-4 w-4 text-gray-500" />,
+      color: "text-gray-600",
+      bgColor: "bg-gray-50",
     },
-    {
-      title: "Flagged Issues",
-      value: flaggedCount.toString(),
-      description: `${((flaggedCount / totalInvoices) * 100).toFixed(0)}% require attention`,
-      icon: AlertTriangle,
-      color: "bg-purple-100 text-purple-700",
-    },
+  ]
+
+  const invoiceStatusData = [
+    { name: "Approved", value: stats?.approved || 0, color: "#10b981" },
+    { name: "Pending", value: stats?.pending || 0, color: "#f59e0b" },
+    { name: "Flagged", value: stats?.flagged || 0, color: "#ef4444" },
+    { name: "Rejected", value: stats?.rejected || 0, color: "#6b7280" },
   ]
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+      <div className="flex items-center justify-between space-y-0">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-sm text-muted-foreground">Monthly invoice statistics overview</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        {statCards.map((stat) => (
+          <Card key={stat.title} className="space-y-0">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              {stat.icon && (
+                <div className={`p-2 rounded-full ${stat.bgColor}`}>
+                  {stat.icon}
                 </div>
-                <div className={`p-2 rounded-full ${stat.color}`}>
-                  <stat.icon className="h-5 w-5" />
-                </div>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-1">
+                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                {stat.percentage !== undefined && (
+                  <p className="text-xs text-muted-foreground">
+                    {parseFloat(stat.percentage).toFixed(0)}% of total
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">{stat.description}</p>
               </div>
             </CardContent>
           </Card>
@@ -126,58 +149,127 @@ export default function Dashboard() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="lg:col-span-4">
               <CardHeader>
-                <CardTitle>Invoice Processing</CardTitle>
-                <CardDescription>Monthly invoice volume and total amount</CardDescription>
+                <CardTitle className="text-xl font-semibold">Monthly Distribution</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Invoice status distribution over time
+                </CardDescription>
               </CardHeader>
-              <CardContent className="pl-2">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                    <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="invoices" fill="#8884d8" name="Invoices" />
-                    <Bar yAxisId="right" dataKey="amount" fill="#82ca9d" name="Amount ($)" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <CardContent className="p-6">
+                <div className="h-[350px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        {
+                          name: "Current Month",
+                          approved: stats?.approved || 0,
+                          pending: stats?.pending || 0,
+                          flagged: stats?.flagged || 0,
+                          rejected: stats?.rejected || 0,
+                        },
+                      ]}
+                      margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e5e7eb' }}
+                      />
+                      <YAxis 
+                        width={35}
+                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e5e7eb' }}
+                      />
+                      <Tooltip 
+                        cursor={{ fill: 'rgba(229, 231, 235, 0.2)' }}
+                        contentStyle={{ 
+                          backgroundColor: '#fff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom"
+                        height={36}
+                        wrapperStyle={{ 
+                          fontSize: '12px',
+                          marginTop: '10px'
+                        }}
+                      />
+                      <Bar dataKey="approved" name="Approved" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      <Bar dataKey="pending" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      <Bar dataKey="flagged" name="Flagged" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      <Bar dataKey="rejected" name="Rejected" fill="#6b7280" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="lg:col-span-3">
               <CardHeader>
-                <CardTitle>Invoice Status</CardTitle>
-                <CardDescription>Current status of all invoices</CardDescription>
+                <CardTitle className="text-xl font-semibold">Status Distribution</CardTitle>
+                <CardDescription className="text-sm text-muted-foreground">
+                  Current invoice status breakdown
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={invoiceStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {invoiceStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              <CardContent className="p-6">
+                <div className="h-[350px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={invoiceStatusData}
+                        cx="50%"
+                        cy="45%"
+                        labelLine={false}
+                        outerRadius={85}
+                        innerRadius={55}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => 
+                          percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
+                        }
+                        labelStyle={{
+                          fontSize: '12px',
+                          fill: '#6b7280',
+                          fontWeight: 500
+                        }}
+                      >
+                        {invoiceStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#fff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom"
+                        height={36}
+                        wrapperStyle={{ 
+                          fontSize: '12px',
+                          marginTop: '20px'
+                        }}
+                        formatter={(value) => <span className="text-gray-600">{value}</span>}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -186,26 +278,14 @@ export default function Dashboard() {
         <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Analytics</CardTitle>
-              <CardDescription>Detailed analytics will be displayed here</CardDescription>
+              <CardTitle className="text-xl font-semibold">Detailed Analytics</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                In-depth analysis of invoice processing
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="h-[400px] flex items-center justify-center border rounded-md">
-                <p className="text-muted-foreground">Analytics content will be displayed here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reports" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reports</CardTitle>
-              <CardDescription>Generated reports will be displayed here</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] flex items-center justify-center border rounded-md">
-                <p className="text-muted-foreground">Reports content will be displayed here</p>
+                <p className="text-sm text-muted-foreground">Detailed analytics coming soon</p>
               </div>
             </CardContent>
           </Card>
