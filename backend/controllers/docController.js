@@ -310,7 +310,7 @@ const getAllInvoices = async (req, res) => {
   
       const invoices = await Invoice.find(filter)
         .sort({ created_at: -1 })
-        .select('invoice_number customer_details.email created_at total');
+        .select('invoice_number customer_details.email created_at total pdf_url');
   
       res.status(200).json({
         success: true,
