@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpDown, Download, Eye, CheckCircle, XCircle, Search } from "lucide-react"
+import { ArrowUpDown, Download, Eye, CheckCircle, XCircle, Search, FileDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getPendingInvoices } from "@/lib/api"
+import { getPendingInvoices, updateInvoiceStatus } from "@/lib/api"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function PendingApprovalsPage() {
@@ -102,20 +102,29 @@ export default function PendingApprovalsPage() {
     window.location.href = `/dashboard/invoice/${id}`
   }
 
+  const handleDownloadInvoice = (pdfUrl) => {
+    window.open(pdfUrl, '_blank');
+  }
+
   const handleApproveInvoice = async (id) => {
     try {
-      await approveInvoice(id);
-      toast({
-        title: "Success",
-        description: "Invoice approved successfully",
-        variant: "default",
-      });
-      const data = await getPendingInvoices();
-      setInvoices(data.invoices || []);
+      const result = await updateInvoiceStatus(id, "Approved");
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message || "Invoice approved successfully",
+          variant: "default",
+        });
+        // Refresh the invoice list
+        const data = await getPendingInvoices();
+        setInvoices(data.invoices || []);
+      } else {
+        throw new Error(result.message || "Failed to approve invoice");
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to approve invoice",
+        description: error.message || "Failed to approve invoice. Please check inventory levels.",
         variant: "destructive",
       });
     }
@@ -123,18 +132,23 @@ export default function PendingApprovalsPage() {
 
   const handleRejectInvoice = async (id) => {
     try {
-      await rejectInvoice(id);
-      toast({
-        title: "Success",
-        description: "Invoice rejected successfully",
-        variant: "default",
-      });
-      const data = await getPendingInvoices();
-      setInvoices(data.invoices || []);
+      const result = await updateInvoiceStatus(id, "Rejected");
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message || "Invoice rejected successfully",
+          variant: "default",
+        });
+        // Refresh the invoice list
+        const data = await getPendingInvoices();
+        setInvoices(data.invoices || []);
+      } else {
+        throw new Error(result.message || "Failed to reject invoice");
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to reject invoice",
+        description: error.message || "Failed to reject invoice",
         variant: "destructive",
       });
     }
@@ -239,21 +253,32 @@ export default function PendingApprovalsPage() {
                     <TableCell>
                       <div className="flex justify-center space-x-2">
                         {invoice.pdf_url && (
-                          <Button
-                            onClick={() => handleViewInvoice(invoice._id)}
-                            size="sm"
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
+                          <>
+                            <Button
+                              onClick={() => handleViewInvoice(invoice._id)}
+                              size="sm"
+                              variant="outline"
+                              className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 px-4 py-2"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              onClick={() => handleDownloadInvoice(invoice.pdf_url)}
+                              size="sm"
+                              variant="outline"
+                              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 px-4 py-2"
+                            >
+                              <FileDown className="h-4 w-4 mr-1" />
+                              Download
+                            </Button>
+                          </>
                         )}
                         <Button
                           onClick={() => handleApproveInvoice(invoice._id)}
                           size="sm"
                           variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                          className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 px-4 py-2"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
@@ -262,7 +287,7 @@ export default function PendingApprovalsPage() {
                           onClick={() => handleRejectInvoice(invoice._id)}
                           size="sm"
                           variant="outline"
-                          className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
+                          className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 px-4 py-2"
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Reject

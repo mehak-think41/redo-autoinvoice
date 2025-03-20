@@ -227,22 +227,40 @@ const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
 };
 
 // Manually Update Invoice Status
-const manuallyUpdateInvoiceStatus = async (invoiceId, action) => {
+const manuallyUpdateInvoiceStatus = async (req, res) => {
     try {
+      const { invoiceId, action } = req.body;
+      
+      if (!invoiceId || !action) {
+        return res.status(400).json({
+          success: false,
+          message: "Both invoiceId and action are required."
+        });
+      }
+
       if (!["Approved", "Rejected"].includes(action)) {
-        throw new Error("Invalid action. Use 'Approved' or 'Rejected'.");
+        return res.status(400).json({
+          success: false,
+          message: "Invalid action. Use 'Approved' or 'Rejected'."
+        });
       }
   
       const invoice = await Invoice.findById(invoiceId);
       if (!invoice) {
-        throw new Error("Invoice not found.");
+        return res.status(404).json({
+          success: false,
+          message: "Invoice not found."
+        });
       }
   
       // If the user is trying to approve the invoice, first check if inventory is sufficient
       if (action === "Approved") {
         const isSufficient = await checkInventoryForInvoice(invoice.line_items, invoice.userId);
         if (!isSufficient) {
-          throw new Error("Inventory is not enough to fulfill the order.");
+          return res.status(400).json({
+            success: false,
+            message: "Inventory is not enough to fulfill the order."
+          });
         }
         // If inventory is sufficient, update the inventory for each line item
         for (const item of invoice.line_items) {
@@ -257,19 +275,19 @@ const manuallyUpdateInvoiceStatus = async (invoiceId, action) => {
       invoice.invoice_status = action;
       await invoice.save();
   
-      return {
+      return res.json({
         success: true,
-        message: `Invoice ${action} successfully.`,
+        message: `Invoice ${action.toLowerCase()} successfully.`,
         invoice,
-      };
+      });
     } catch (error) {
       console.error("Error updating invoice status:", error);
-      return {
+      return res.status(500).json({
         success: false,
-        message: error.message,
-      };
+        message: error.message || "Internal server error"
+      });
     }
-  };  
+  };
 
 //invoice by id
 const getInvoiceById = async (req, res) => {

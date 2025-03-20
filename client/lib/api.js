@@ -93,3 +93,19 @@ export const getMonthlyInvoiceStats = async () => {
   const response = await api.get("/doc/stats/monthly");
   return response.data;
 };
+
+export const updateInvoiceStatus = async (invoiceId, action) => {
+  try {
+    const response = await api.post('/doc/update-status', {
+      invoiceId,
+      action
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.message || `Error ${action.toLowerCase()}ing invoice`);
+    }
+    return response.data;
+  } catch (error) {
+    console.error(`Error ${action.toLowerCase()}ing invoice:`, error);
+    throw error.response?.data || error;
+  }
+};
