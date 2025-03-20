@@ -6,7 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpDown, Download, Eye, FileDown, Search } from "lucide-react"
+import { 
+  ArrowUpDown, 
+  Download, 
+  Eye, 
+  CheckCircle, 
+  XCircle, 
+  Search, 
+  FileDown,
+  ClipboardList,
+  DollarSign,
+  Calculator,
+  CheckSquare,
+  XSquare
+} from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getProcessedInvoices } from "@/lib/api"
 
@@ -128,46 +141,83 @@ export default function ProcessedPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Processed</CardTitle>
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                  <span>Total Processed</span>
+                </div>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalProcessed}</div>
+            <div className="flex gap-2 mt-2">
             <p className="text-xs text-muted-foreground">
               {approvedInvoices.length} approved, {rejectedInvoices.length} rejected
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Amount (Approved)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${Math.round(averageApprovedAmount).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">per approved invoice</p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Amount (Approved)</CardTitle>
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-green-600" />
+                  <span>Approved Amount</span>
+                </div>
+                <Badge variant="outline" className="px-3 py-1 bg-green-50 text-green-700 border-green-200">
+                  Success
+                </Badge>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               ${totalApprovedAmount.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">approved value</p>
+            <p className="text-xs text-muted-foreground mt-2">approved value</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Amount (Rejected)</CardTitle>
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <XSquare className="h-4 w-4 text-red-600" />
+                  <span>Rejected Amount</span>
+                </div>
+                <Badge variant="outline" className="px-3 py-1 bg-red-50 text-red-700 border-red-200">
+                  Failed
+                </Badge>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               ${totalRejectedAmount.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">rejected value</p>
+            <p className="text-xs text-muted-foreground mt-2">rejected value</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-muted-foreground" />
+                  <span>Average (Approved)</span>
+                </div>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${Math.round(averageApprovedAmount).toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">per approved invoice</p>
           </CardContent>
         </Card>
       </div>
@@ -254,7 +304,7 @@ export default function ProcessedPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                          className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
                           onClick={() => handleViewInvoice(invoice._id)}
                         >
                           <Eye className="h-4 w-4 mr-1" />
@@ -263,7 +313,7 @@ export default function ProcessedPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                          className="px-4 py-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
                           onClick={() => handleDownloadInvoice(invoice)}
                         >
                           <FileDown className="h-4 w-4 mr-1" />
