@@ -82,6 +82,111 @@ const getFlaggedInvoiceEmailTemplate = (invoice) => {
   };
 };
 
+// Email template for approved invoice notification to customer
+const getApprovedInvoiceCustomerTemplate = (invoice) => {
+  return {
+    subject: `[${process.env.COMPANY_NAME}] Order Confirmation - Invoice #${invoice.invoiceNumber}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50; text-align: center; padding: 20px 0;">
+          Order Confirmation
+        </h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+          <p>Dear ${invoice.customerName || 'Valued Customer'},</p>
+          <p>Thank you for your order. We're pleased to confirm that your invoice has been processed successfully.</p>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber || 'N/A'}</li>
+            <li><strong>Amount:</strong> $${invoice.amount?.toFixed(2) || '0.00'}</li>
+            <li><strong>Status:</strong> <span style="color: #27ae60;">Approved</span></li>
+          </ul>
+          <div style="background-color: #e8f6f3; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #27ae60;"><strong>Delivery Information</strong></p>
+            <p style="margin: 10px 0 0 0;">Your order will be delivered within 3-5 business days.</p>
+            <p style="margin: 10px 0 0 0;">Delivery Address:<br>${invoice.shippingAddress || 'Address not provided'}</p>
+          </div>
+          <p>If you have any questions about your order, please don't hesitate to contact us.</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
+          This is an automated message from ${process.env.COMPANY_NAME}. Please do not reply to this email.
+        </p>
+      </div>
+    `
+  };
+};
+
+// Email template for delayed delivery notification to customer
+const getDelayedDeliveryCustomerTemplate = (invoice) => {
+  return {
+    subject: `[${process.env.COMPANY_NAME}] Important: Order Delivery Update - Invoice #${invoice.invoiceNumber}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50; text-align: center; padding: 20px 0;">
+          Order Delivery Update
+        </h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+          <p>Dear ${invoice.customerName || 'Valued Customer'},</p>
+          <p>Thank you for your order. We want to inform you about an important update regarding your recent purchase.</p>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber || 'N/A'}</li>
+            <li><strong>Amount:</strong> $${invoice.amount?.toFixed(2) || '0.00'}</li>
+          </ul>
+          <div style="background-color: #fdf2e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #e67e22;"><strong>Delivery Update</strong></p>
+            <p style="margin: 10px 0 0 0;">Due to high demand, some items in your order are currently being restocked. 
+            Your order will be delivered within 10-14 business days.</p>
+            <p style="margin: 10px 0 0 0;">Delivery Address:<br>${invoice.shippingAddress || 'Address not provided'}</p>
+          </div>
+          <p>We apologize for any inconvenience and are working to fulfill your order as quickly as possible. 
+          If you have any questions, please don't hesitate to contact us.</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
+          This is an automated message from ${process.env.COMPANY_NAME}. Please do not reply to this email.
+        </p>
+      </div>
+    `
+  };
+};
+
+// Email template for missing SKU notification to customer
+const getMissingSkuCustomerTemplate = (invoice, skuDetails) => {
+  return {
+    subject: `[${process.env.COMPANY_NAME}] Important: Order Update - Unavailable Item`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50; text-align: center; padding: 20px 0;">
+          Order Update Required
+        </h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+          <p>Dear ${invoice.customerName || 'Valued Customer'},</p>
+          <p>We regret to inform you that we are unable to process your order at this time.</p>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber || 'N/A'}</li>
+            <li><strong>Amount:</strong> $${invoice.amount?.toFixed(2) || '0.00'}</li>
+          </ul>
+          <div style="background-color: #fee8e7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #c0392b;"><strong>Item Unavailable</strong></p>
+            <p style="margin: 10px 0 0 0;">The following item in your order is no longer available in our catalog:</p>
+            <ul style="margin: 10px 0; color: #c0392b;">
+              <li>Item SKU: ${skuDetails.sku}</li>
+              <li>Quantity Requested: ${skuDetails.quantity}</li>
+            </ul>
+            <p style="margin: 10px 0 0 0;">We recommend:</p>
+            <ol style="margin: 5px 0;">
+              <li>Reviewing your order details</li>
+              <li>Checking the SKU number for accuracy</li>
+              <li>Contacting our support team for assistance</li>
+            </ol>
+          </div>
+          <p>We apologize for any inconvenience. Please contact our support team to update your order or explore alternative options.</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
+          This is an automated message from ${process.env.COMPANY_NAME}. Please do not reply to this email.
+        </p>
+      </div>
+    `
+  };
+};
+
 const sendPendingInvoiceEmail = async (userEmail, invoice) => {
   try {
     const template = getPendingInvoiceEmailTemplate(invoice);
@@ -122,7 +227,70 @@ const sendFlaggedInvoiceEmail = async (userEmail, invoice) => {
   }
 };
 
+const sendApprovedInvoiceCustomerEmail = async (customerEmail, invoice) => {
+  try {
+    const template = getApprovedInvoiceCustomerTemplate(invoice);
+    
+    const mailOptions = {
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: customerEmail,
+      subject: template.subject,
+      html: template.html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Approved invoice customer email sent:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending approved invoice customer email:', error);
+    throw error;
+  }
+};
+
+const sendDelayedDeliveryCustomerEmail = async (customerEmail, invoice) => {
+  try {
+    const template = getDelayedDeliveryCustomerTemplate(invoice);
+    
+    const mailOptions = {
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: customerEmail,
+      subject: template.subject,
+      html: template.html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Delayed delivery customer email sent:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending delayed delivery customer email:', error);
+    throw error;
+  }
+};
+
+const sendMissingSkuCustomerEmail = async (customerEmail, invoice, skuDetails) => {
+  try {
+    const template = getMissingSkuCustomerTemplate(invoice, skuDetails);
+    
+    const mailOptions = {
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: customerEmail,
+      subject: template.subject,
+      html: template.html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Missing SKU customer email sent:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error sending missing SKU customer email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendPendingInvoiceEmail,
-  sendFlaggedInvoiceEmail
+  sendFlaggedInvoiceEmail,
+  sendApprovedInvoiceCustomerEmail,
+  sendDelayedDeliveryCustomerEmail,
+  sendMissingSkuCustomerEmail
 };

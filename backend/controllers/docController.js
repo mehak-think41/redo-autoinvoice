@@ -5,7 +5,7 @@ const Invoice = require("../models/Invoice");
 const Inventory = require("../models/Inventory");
 const { EmailLog } = require("../models/EmailLog");
 const User = require("../models/User");
-const { sendPendingInvoiceEmail, sendFlaggedInvoiceEmail } = require("../services/emailService");
+const { sendPendingInvoiceEmail, sendFlaggedInvoiceEmail, sendApprovedInvoiceCustomerEmail, sendDelayedDeliveryCustomerEmail, sendMissingSkuCustomerEmail } = require("../services/emailService");
 
 require("dotenv").config();
 
@@ -65,7 +65,8 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
 
     const isFulfillable = await checkInventoryForInvoice(
       invoiceData.line_items,
-      userId
+      userId,
+      invoiceData
     );
 
     let invoiceStatus;
@@ -87,10 +88,26 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
       }
     } else if (isFulfillable) {
       invoiceStatus = "Approved";
+      // Send order confirmation to customer
+      try {
+        const customerEmail = invoiceData.customer_details?.email;
+        if (customerEmail) {
+          await sendApprovedInvoiceCustomerEmail(customerEmail, {
+            invoiceNumber: invoiceData.invoice_number,
+            amount: invoiceData.total,
+            customerName: invoiceData.customer_details?.name,
+            shippingAddress: invoiceData.customer_details?.shipping_address
+          });
+        }
+      } catch (emailError) {
+        console.error("Error sending order confirmation to customer:", emailError);
+        // Don't throw error - continue with invoice processing even if email fails
+      }
     } else {
       invoiceStatus = "Flagged";
-      // Get user email and send notification for flagged invoice
+      // Send notifications for flagged invoice
       try {
+        // Internal notification
         const user = await User.findById(userId);
         if (user && user.email) {
           await sendFlaggedInvoiceEmail(user.email, {
@@ -98,8 +115,19 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
             amount: invoiceData.total
           });
         }
+
+        // Customer notification about delayed delivery
+        const customerEmail = invoiceData.customer_details?.email;
+        if (customerEmail) {
+          await sendDelayedDeliveryCustomerEmail(customerEmail, {
+            invoiceNumber: invoiceData.invoice_number,
+            amount: invoiceData.total,
+            customerName: invoiceData.customer_details?.name,
+            shippingAddress: invoiceData.customer_details?.shipping_address
+          });
+        }
       } catch (emailError) {
-        console.error("Error sending flagged invoice notification:", emailError);
+        console.error("Error sending invoice notifications:", emailError);
         // Don't throw error - continue with invoice processing even if email fails
       }
     }
@@ -159,10 +187,27 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
 };
 
 // Check Inventory for Invoice
-const checkInventoryForInvoice = async (lineItems, userId) => {
+const checkInventoryForInvoice = async (lineItems, userId, invoiceData) => {
     for (const item of lineItems) {
       const inventoryItem = await Inventory.findOne({ sku: item.sku, userId });
       if (!inventoryItem) {
+        // Send notification to customer about missing SKU
+        try {
+          const customerEmail = invoiceData?.customer_details?.email;
+          if (customerEmail) {
+            await sendMissingSkuCustomerEmail(customerEmail, {
+              invoiceNumber: invoiceData.invoice_number,
+              amount: invoiceData.total,
+              customerName: invoiceData.customer_details?.name
+            }, {
+              sku: item.sku,
+              quantity: item.quantity
+            });
+          }
+        } catch (emailError) {
+          console.error("Error sending missing SKU notification:", emailError);
+          // Continue with error throw even if email fails
+        }
         throw new Error(`Inventory item with SKU ${item.sku} is missing. Process halted.`);
       }
       const actualStock = inventoryItem.quantity;
@@ -284,7 +329,7 @@ const manuallyUpdateInvoiceStatus = async (req, res) => {
   
       // If the user is trying to approve the invoice, first check if inventory is sufficient
       if (action === "Approved") {
-        const isSufficient = await checkInventoryForInvoice(invoice.line_items, invoice.userId);
+        const isSufficient = await checkInventoryForInvoice(invoice.line_items, invoice.userId, invoice);
         if (!isSufficient) {
           return res.status(400).json({
             success: false,
