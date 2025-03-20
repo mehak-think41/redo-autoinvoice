@@ -6,7 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpDown, Download, Eye, CheckCircle, XCircle, Search, FileDown } from "lucide-react"
+import { 
+  ArrowUpDown, 
+  Download, 
+  Eye, 
+  CheckCircle, 
+  XCircle, 
+  Search, 
+  FileDown,
+  ClipboardList,
+  AlertCircle,
+  AlertTriangle,
+  DollarSign,
+  FileText
+} from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getPendingInvoices, updateInvoiceStatus } from "@/lib/api"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -155,32 +168,88 @@ export default function PendingApprovalsPage() {
   }
 
   // Calculate statistics
-  const totalPending = invoices.length
-  const totalAmount = invoices.reduce((acc, inv) => acc + (inv.total || 0), 0)
+  const pendingInvoices = invoices.filter(inv => inv.invoice_status === "Pending")
+  const flaggedInvoices = invoices.filter(inv => inv.invoice_status === "Flagged")
+  
+  const pendingAmount = pendingInvoices.reduce((acc, inv) => acc + (inv.total || 0), 0)
+  const flaggedAmount = flaggedInvoices.reduce((acc, inv) => acc + (inv.total || 0), 0)
+  const totalPendingValue = pendingAmount + flaggedAmount
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                  <span>Total Invoices</span>
+                </div>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalPending}</div>
-            <p className="text-xs text-muted-foreground">
-              awaiting approval
+            <div className="text-2xl font-bold">{invoices.length}</div>
+            <p className="text-xs text-muted-foreground mt-2">Awaiting Review</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <span>Pending</span>
+                </div>
+                <Badge variant="outline" className="px-3 py-1 bg-yellow-50 text-yellow-700 border-yellow-200">
+                  Low Confidence
+                </Badge>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingInvoices.length}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              ${pendingAmount.toLocaleString()} total value
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <span>Flagged</span>
+                </div>
+                <Badge variant="outline" className="px-3 py-1 bg-red-50 text-red-700 border-red-200">
+                  Inventory Issue
+                </Badge>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${totalAmount.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">pending approval</p>
+            <div className="text-2xl font-bold">{flaggedInvoices.length}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              ${flaggedAmount.toLocaleString()} total value
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium w-full">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span>Total Amount</span>
+                </div>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totalPendingValue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-2">Pending Approval</p>
           </CardContent>
         </Card>
       </div>
@@ -200,7 +269,7 @@ export default function PendingApprovalsPage() {
             onClick={exportToCSV}
             size="sm"
             variant="outline"
-            className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800"
+            className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800 px-4 py-2"
           >
             <Download className="h-4 w-4 mr-2" />
             Export CSV
@@ -210,48 +279,53 @@ export default function PendingApprovalsPage() {
         <div className="rounded-md border">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-muted/50">
-                <TableHead className="w-[25%]">Invoice Number</TableHead>
-                <TableHead className="w-[25%]">Customer Email</TableHead>
-                <TableHead className="w-[15%] text-center cursor-pointer" onClick={() => requestSort("date")}>
-                  <div className="flex items-center justify-center">
-                    Date {getSortIcon("date")}
-                  </div>
-                </TableHead>
-                <TableHead className="w-[15%] text-center cursor-pointer" onClick={() => requestSort("amount")}>
-                  <div className="flex items-center justify-center">
-                    Amount {getSortIcon("amount")}
-                  </div>
-                </TableHead>
-                <TableHead className="w-[20%] text-center">Actions</TableHead>
+              <TableRow>
+                <TableHead className="text-left w-[20%]">Invoice Number</TableHead>
+                <TableHead className="text-left w-[25%]">Customer Email</TableHead>
+                <TableHead className="text-center w-[15%]">Status</TableHead>
+                <TableHead className="text-center w-[15%]">Date</TableHead>
+                <TableHead className="text-center w-[15%]">Amount</TableHead>
+                <TableHead className="text-center w-[10%]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
+                  <TableCell colSpan={6} className="text-center py-4">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : sortedInvoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
+                  <TableCell colSpan={6} className="text-center py-4">
                     No invoices found
                   </TableCell>
                 </TableRow>
               ) : (
                 sortedInvoices.map((invoice) => (
-                  <TableRow key={invoice._id} className="hover:bg-muted/50">
-                    <TableCell>{invoice.invoice_number}</TableCell>
-                    <TableCell>{invoice.customer_details?.email}</TableCell>
+                  <TableRow key={invoice._id}>
+                    <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                    <TableCell>{invoice.customer_details.email}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant="outline"
+                        className={`px-3 py-1 ${
+                          invoice.invoice_status === "Pending"
+                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            : "bg-red-50 text-red-700 border-red-200"
+                        }`}
+                      >
+                        {invoice.invoice_status}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-center">
                       {new Date(invoice.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-center">
-                      ${invoice.total?.toLocaleString()}
+                      ${invoice.total?.toLocaleString() || "0"}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-center space-x-2">
+                    <TableCell className="text-center">
+                    <div className="flex justify-center space-x-2">
                         {invoice.pdf_url && (
                           <>
                             <Button
@@ -263,15 +337,7 @@ export default function PendingApprovalsPage() {
                               <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
-                            <Button
-                              onClick={() => handleDownloadInvoice(invoice.pdf_url)}
-                              size="sm"
-                              variant="outline"
-                              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 px-4 py-2"
-                            >
-                              <FileDown className="h-4 w-4 mr-1" />
-                              Download
-                            </Button>
+                            
                           </>
                         )}
                         <Button
@@ -299,22 +365,6 @@ export default function PendingApprovalsPage() {
               )}
             </TableBody>
           </Table>
-        </div>
-
-        {/* Status Badge Legend */}
-        <div className="flex items-center space-x-4 text-sm">
-          <div className="flex items-center">
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 px-3 py-1">
-              Pending
-            </Badge>
-            <span className="ml-2 text-muted-foreground">Low confidence score</span>
-          </div>
-          <div className="flex items-center">
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 px-3 py-1">
-              Flagged
-            </Badge>
-            <span className="ml-2 text-muted-foreground">No approved because of shortage in inventory</span>
-          </div>
         </div>
       </div>
     </div>
