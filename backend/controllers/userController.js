@@ -13,7 +13,6 @@ const s3 = new AWS.S3({
   region: 'ap-south-1',
 });
 
-
 const getGmailInbox = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -195,9 +194,40 @@ const getGmailInboxLive = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch profile: ' + error.message });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update allowed fields
+    if (req.body.name) user.name = req.body.name;
+    if (req.body.email) user.email = req.body.email;
+
+    const updatedUser = await user.save();
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ error: 'Failed to update profile: ' + error.message });
+  }
+};
 
 module.exports = {
   getGmailInbox,
   getGmailInboxLive,
-  watchLive
+  watchLive,
+  getProfile,
+  updateProfile
 };
