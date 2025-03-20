@@ -93,18 +93,20 @@ const getApprovedInvoiceCustomerTemplate = (invoice) => {
         </h2>
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
           <p>Dear ${invoice.customerName || 'Valued Customer'},</p>
-          <p>Thank you for your order. We're pleased to confirm that your invoice has been processed successfully.</p>
+          <p>Thank you for your order. We're pleased to confirm that your invoice has been approved and processed.</p>
           <ul style="list-style: none; padding: 0;">
             <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber || 'N/A'}</li>
             <li><strong>Amount:</strong> $${invoice.amount?.toFixed(2) || '0.00'}</li>
             <li><strong>Status:</strong> <span style="color: #27ae60;">Approved</span></li>
           </ul>
-          <div style="background-color: #e8f6f3; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p style="margin: 0; color: #27ae60;"><strong>Delivery Information</strong></p>
-            <p style="margin: 10px 0 0 0;">Your order will be delivered within 3-5 business days.</p>
-            <p style="margin: 10px 0 0 0;">Delivery Address:<br>${invoice.shippingAddress || 'Address not provided'}</p>
+          ${invoice.shippingAddress ? `
+          <div style="background-color: #edf7ed; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #1e8449;"><strong>Delivery Information</strong></p>
+            <p style="margin: 10px 0 0 0;">Your order will be delivered to:</p>
+            <p style="margin: 5px 0 0 0;">${invoice.shippingAddress}</p>
           </div>
-          <p>If you have any questions about your order, please don't hesitate to contact us.</p>
+          ` : ''}
+          <p>We will notify you once your order has been dispatched.</p>
         </div>
         <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
           This is an automated message from ${process.env.COMPANY_NAME}. Please do not reply to this email.
@@ -388,13 +390,27 @@ const sendSupplierOrderEmail = async (supplierEmail, skus, additionalNotes, user
 
 const sendInvoiceStatusEmail = async (invoice) => {
   try {
+    const customerEmail = invoice.customer_details?.email;
+    if (!customerEmail) {
+      throw new Error('Customer email not found in invoice');
+    }
+
     const template = invoice.invoice_status === 'Approved' 
-      ? getApprovedInvoiceCustomerTemplate(invoice)
-      : getRejectedInvoiceCustomerTemplate(invoice);
+      ? getApprovedInvoiceCustomerTemplate({
+          invoiceNumber: invoice.invoice_number,
+          amount: invoice.total,
+          customerName: invoice.customer_details?.name,
+          shippingAddress: invoice.customer_details?.shipping_address
+        })
+      : getRejectedInvoiceCustomerTemplate({
+          invoiceNumber: invoice.invoice_number,
+          amount: invoice.total,
+          customerName: invoice.customer_details?.name
+        });
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
-      to: invoice.customerEmail,
+      to: customerEmail,
       subject: template.subject,
       html: template.html
     });
