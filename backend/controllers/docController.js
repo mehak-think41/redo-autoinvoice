@@ -4,6 +4,8 @@ const { Groq } = require("groq-sdk");
 const Invoice = require("../models/Invoice");
 const Inventory = require("../models/Inventory");
 const { EmailLog } = require("../models/EmailLog");
+const User = require("../models/User");
+const { sendPendingInvoiceEmail, sendFlaggedInvoiceEmail } = require("../services/emailService");
 
 require("dotenv").config();
 
@@ -69,10 +71,37 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
     let invoiceStatus;
     if (invoiceData.confidence_score < 50) {
       invoiceStatus = "Pending"; // Low confidence requires manual review
+      // Get user email and send notification
+      try {
+        const user = await User.findById(userId);
+        if (user && user.email) {
+          await sendPendingInvoiceEmail(user.email, {
+            invoiceNumber: invoiceData.invoice_number,
+            amount: invoiceData.total,
+            confidence_score: invoiceData.confidence_score
+          });
+        }
+      } catch (emailError) {
+        console.error("Error sending pending invoice notification:", emailError);
+        // Don't throw error - continue with invoice processing even if email fails
+      }
     } else if (isFulfillable) {
       invoiceStatus = "Approved";
     } else {
       invoiceStatus = "Flagged";
+      // Get user email and send notification for flagged invoice
+      try {
+        const user = await User.findById(userId);
+        if (user && user.email) {
+          await sendFlaggedInvoiceEmail(user.email, {
+            invoiceNumber: invoiceData.invoice_number,
+            amount: invoiceData.total
+          });
+        }
+      } catch (emailError) {
+        console.error("Error sending flagged invoice notification:", emailError);
+        // Don't throw error - continue with invoice processing even if email fails
+      }
     }
 
     const invoice = new Invoice({
