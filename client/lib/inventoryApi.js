@@ -88,3 +88,14 @@ export const getInventoryShortages = async (category) => {
     throw error;
   }
 };
+
+// Send supplier order email
+export const sendSupplierOrder = async (orderData) => {
+  try {
+    const response = await api.post('/inventory/send-supplier-order', orderData);
+    return response.data;
+  } catch (error) {
+    console.error('Error sending supplier order:', error);
+    throw error;
+  }
+};

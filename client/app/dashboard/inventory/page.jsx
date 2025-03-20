@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpDown, Download, Search, Plus, Pencil, Save, X, Trash2 } from "lucide-react"
+import { ArrowUpDown, Download, Search, Plus, Pencil, Save, X, Trash2, Send } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { getAllInventory, createInventory, updateInventory, deleteInventory } from "@/lib/inventoryApi"
+import { getAllInventory, createInventory, updateInventory, deleteInventory, sendSupplierOrder } from "@/lib/inventoryApi"
 
 // Add Item Modal Component
 const AddItemModal = ({ isOpen, onClose, onSubmit }) => {
@@ -135,11 +135,95 @@ const AddItemModal = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
+// Supplier Order Modal Component
+const SupplierOrderModal = ({ isOpen, onClose, item, onSubmit }) => {
+  if (!isOpen) return null;
+
+  const [quantity, setQuantity] = useState(1);
+  const [additionalNotes, setAdditionalNotes] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({
+      supplierEmail: item.supplierEmail,
+      skus: [{
+        code: item.sku,
+        name: item.name,
+        quantity: parseInt(quantity),
+        specifications: item.specifications
+      }],
+      additionalNotes
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-background rounded-lg shadow-lg w-full max-w-[500px] p-6">
+        <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-6">
+          <h2 className="text-xl font-semibold">Order from Supplier</h2>
+          <p className="text-sm text-muted-foreground">
+            Send order request to supplier for {item.name}
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">SKU</label>
+              <Input value={item.sku} disabled className="w-full mt-1.5" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Item Name</label>
+              <Input value={item.name} disabled className="w-full mt-1.5" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Supplier Email</label>
+              <Input value={item.supplierEmail} disabled className="w-full mt-1.5" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Order Quantity</label>
+              <Input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="w-full mt-1.5"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Additional Notes</label>
+              <textarea
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                className="w-full mt-1.5 min-h-[100px] p-2 border rounded-md"
+                placeholder="Enter any additional notes or specifications..."
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Send className="h-4 w-4 mr-1" />
+                Send Order
+              </Button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 export default function InventoryPage() {
   const [items, setItems] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [sortConfig, setSortConfig] = useState({ key: "lastUpdated", direction: "desc" })
   const [isAddItemOpen, setIsAddItemOpen] = useState(false)
+  const [isSupplierOrderOpen, setIsSupplierOrderOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [isLoading, setIsLoading] = useState(true)
@@ -336,6 +420,23 @@ export default function InventoryPage() {
     link.click()
     document.body.removeChild(link)
   }
+
+  const handleSupplierOrder = async (orderData) => {
+    try {
+      await sendSupplierOrder(orderData);
+      setIsSupplierOrderOpen(false);
+      toast({
+        title: "Order Sent",
+        description: "Purchase order has been sent to the supplier",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "Failed to send order to supplier",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Calculate statistics
   const totalItems = items.reduce((acc, item) => acc + (item.quantity || 0), 0)
@@ -551,6 +652,19 @@ export default function InventoryPage() {
                             <Button
                               size="sm"
                               variant="outline"
+                              className="px-4 py-2 bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setIsSupplierOrderOpen(true);
+                              }}
+                              title="Order from supplier"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              Order
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="px-4 py-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800"
                               onClick={() => handleDelete(item._id)}
                             >
@@ -569,14 +683,18 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Add Item Modal */}
-      {isAddItemOpen && (
-        <AddItemModal 
-          isOpen={isAddItemOpen} 
-          onClose={() => setIsAddItemOpen(false)} 
-          onSubmit={handleAddItem}
-        />
-      )}
+      <AddItemModal
+        isOpen={isAddItemOpen}
+        onClose={() => setIsAddItemOpen(false)}
+        onSubmit={handleAddItem}
+      />
+
+      <SupplierOrderModal
+        isOpen={isSupplierOrderOpen}
+        onClose={() => setIsSupplierOrderOpen(false)}
+        item={selectedItem}
+        onSubmit={handleSupplierOrder}
+      />
     </div>
   )
 }
