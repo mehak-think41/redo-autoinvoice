@@ -41,7 +41,7 @@ const updateInventory = async (req, res) => {
     try {
       const updateData = {
         ...req.body,
-        LastUpdated: Date.now()
+        lastUpdated: Date.now()
       };
       const inventory = await Inventory.findOneAndUpdate(
         { _id: req.params.id, userId: req.user._id },
