@@ -1,4 +1,5 @@
 const Inventory = require('../models/Inventory');
+const User = require('../models/User');
 const { sendSupplierOrderEmail } = require('../services/emailService');
 
 // Create
@@ -152,7 +153,13 @@ const sendSupplierOrder = async (req, res) => {
       return res.status(400).json({ error: 'Invalid request data. Please provide supplierEmail and at least one SKU.' });
     }
 
-    await sendSupplierOrderEmail(supplierEmail, skus, additionalNotes, req.user?.name);
+    // Get user details from database
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await sendSupplierOrderEmail(supplierEmail, skus, additionalNotes, user.name, user.email);
     res.status(200).json({ message: 'Order email sent successfully to supplier' });
   } catch (error) {
     console.error('Error sending supplier order email:', error);

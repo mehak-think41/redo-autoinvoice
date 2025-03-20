@@ -188,7 +188,7 @@ const getMissingSkuCustomerTemplate = (invoice, skuDetails) => {
 };
 
 // Email template for supplier order
-const getSupplierOrderTemplate = (skus, additionalNotes, userName) => {
+const getSupplierOrderTemplate = (skus, additionalNotes, userName, userEmail) => {
   const skuTableRows = skus.map(sku => `
     <tr>
       <td style="border: 1px solid #ddd; padding: 8px;">${sku.code}</td>
@@ -225,7 +225,9 @@ const getSupplierOrderTemplate = (skus, additionalNotes, userName) => {
           
           <p style="margin-top: 20px;">Please confirm the availability and provide a quotation for the above items.</p>
           
-          <p style="margin-top: 20px;">Best regards,<br>${userName || 'Purchasing Team'}</p>
+          <p style="margin-top: 20px;">Best regards,<br>
+          ${userName || 'Purchasing Team'}<br>
+          ${userEmail ? `Email: ${userEmail}` : ''}</p>
         </div>
         <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
           This is an automated message from ${process.env.COMPANY_NAME}. Please reply to this email with your quotation.
@@ -335,9 +337,9 @@ const sendMissingSkuCustomerEmail = async (customerEmail, invoice, skuDetails) =
   }
 };
 
-const sendSupplierOrderEmail = async (supplierEmail, skus, additionalNotes, userName) => {
+const sendSupplierOrderEmail = async (supplierEmail, skus, additionalNotes, userName, userEmail) => {
   try {
-    const { subject, html } = getSupplierOrderTemplate(skus, additionalNotes, userName);
+    const { subject, html } = getSupplierOrderTemplate(skus, additionalNotes, userName, userEmail);
     
     const mailOptions = {
       from: process.env.SMTP_FROM,

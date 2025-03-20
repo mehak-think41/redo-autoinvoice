@@ -18,4 +18,7 @@ router.get('/:id', inventoryController.getInventory);
 router.put('/:id', inventoryController.updateInventory);
 router.delete('/:id', inventoryController.deleteInventory);
 
+// Email routes
+router.post('/send-supplier-order', inventoryController.sendSupplierOrder);
+
 module.exports = router;
