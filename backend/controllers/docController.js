@@ -5,7 +5,14 @@ const Invoice = require("../models/Invoice");
 const Inventory = require("../models/Inventory");
 const { EmailLog } = require("../models/EmailLog");
 const User = require("../models/User");
-const { sendPendingInvoiceEmail, sendFlaggedInvoiceEmail, sendApprovedInvoiceCustomerEmail, sendDelayedDeliveryCustomerEmail, sendMissingSkuCustomerEmail } = require("../services/emailService");
+const { 
+  sendPendingInvoiceEmail, 
+  sendFlaggedInvoiceEmail, 
+  sendApprovedInvoiceCustomerEmail, 
+  sendDelayedDeliveryCustomerEmail, 
+  sendMissingSkuCustomerEmail,
+  sendInvoiceStatusEmail 
+} = require("../services/emailService");
 
 require("dotenv").config();
 
@@ -348,6 +355,9 @@ const manuallyUpdateInvoiceStatus = async (req, res) => {
       // Update the invoice status to the requested action
       invoice.invoice_status = action;
       await invoice.save();
+
+      // Send email notification to customer about invoice status
+      await sendInvoiceStatusEmail(invoice);
   
       return res.json({
         success: true,

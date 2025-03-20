@@ -237,6 +237,36 @@ const getSupplierOrderTemplate = (skus, additionalNotes, userName, userEmail) =>
   };
 };
 
+const getRejectedInvoiceCustomerTemplate = (invoice) => {
+  return {
+    subject: `[${process.env.COMPANY_NAME}] Invoice Update - Invoice #${invoice.invoiceNumber}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50; text-align: center; padding: 20px 0;">
+          Invoice Status Update
+        </h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+          <p>Dear ${invoice.customerName || 'Valued Customer'},</p>
+          <p>We regret to inform you that your recent invoice could not be processed at this time.</p>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Invoice Number:</strong> ${invoice.invoiceNumber || 'N/A'}</li>
+            <li><strong>Amount:</strong> $${invoice.amount?.toFixed(2) || '0.00'}</li>
+            <li><strong>Status:</strong> <span style="color: #e74c3c;">Rejected</span></li>
+          </ul>
+          <div style="background-color: #fdeaea; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 0; color: #c0392b;"><strong>Next Steps</strong></p>
+            <p style="margin: 10px 0 0 0;">Please contact our support team for more information about your invoice status.</p>
+          </div>
+          <p>We apologize for any inconvenience this may have caused. If you have any questions, please don't hesitate to reach out to our support team.</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
+          This is an automated message from ${process.env.COMPANY_NAME}. Please do not reply to this email.
+        </p>
+      </div>
+    `
+  };
+};
+
 const sendPendingInvoiceEmail = async (userEmail, invoice) => {
   try {
     const template = getPendingInvoiceEmailTemplate(invoice);
@@ -356,11 +386,32 @@ const sendSupplierOrderEmail = async (supplierEmail, skus, additionalNotes, user
   }
 };
 
+const sendInvoiceStatusEmail = async (invoice) => {
+  try {
+    const template = invoice.invoice_status === 'Approved' 
+      ? getApprovedInvoiceCustomerTemplate(invoice)
+      : getRejectedInvoiceCustomerTemplate(invoice);
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: invoice.customerEmail,
+      subject: template.subject,
+      html: template.html
+    });
+  } catch (error) {
+    console.error('Error sending invoice status email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendPendingInvoiceEmail,
   sendFlaggedInvoiceEmail,
   sendApprovedInvoiceCustomerEmail,
   sendDelayedDeliveryCustomerEmail,
   sendMissingSkuCustomerEmail,
-  sendSupplierOrderEmail
+  sendSupplierOrderEmail,
+  sendInvoiceStatusEmail,
+  getApprovedInvoiceCustomerTemplate,
+  getRejectedInvoiceCustomerTemplate
 };
