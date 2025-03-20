@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -18,16 +18,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import { Search, ClipboardList, AlertTriangle, Calculator, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { gapAnalysis } from "@/data/mockData";
+import { getGapAnalysis } from "@/lib/api";
 
 export default function GapAnalysisPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [gapData, setGapData] = useState({ summary: {}, categories: [] });
   const { toast } = useToast();
 
+  useEffect(() => {
+    const fetchGapAnalysis = async () => {
+      try {
+        const data = await getGapAnalysis();
+        setGapData(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch gap analysis data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGapAnalysis();
+  }, [toast]);
+
   // Filter gap items based on search
-  const filteredGapItems = gapAnalysis.filter((item) =>
+  const filteredGapItems = gapData.categories.filter((item) =>
     item.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -69,63 +90,85 @@ export default function GapAnalysisPage() {
     }
   };
 
+  if (loading) {
+    return <div className="flex justify-center items-center h-48">Loading...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Categories
+              <CardTitle className="text-sm font-medium w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                    <span>Total Categories</span>
+                  </div>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{gapAnalysis.length}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">{gapData.summary.totalCategories}</div>
+              <p className="text-xs text-muted-foreground mt-2">
                 Categories being tracked
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                High Impact Gaps
+              <CardTitle className="text-sm font-medium w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <span>High Impact Gaps</span>
+                  </div>
+                  <Badge variant="outline" className="px-3 py-1 bg-red-50 text-red-700 border-red-200">
+                    Critical
+                  </Badge>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {gapAnalysis.filter((item) => item.impact === "high").length}
-              </div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">{gapData.summary.highImpactGaps}</div>
+              <p className="text-xs text-muted-foreground mt-2">
                 Categories needing immediate attention
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Gap</CardTitle>
+              <CardTitle className="text-sm font-medium w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="h-4 w-4 text-muted-foreground" />
+                    <span>Average Gap</span>
+                  </div>
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.round(
-                  gapAnalysis.reduce((acc, item) => acc + item.gap, 0) /
-                    gapAnalysis.length
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">{gapData.summary.averageGap}</div>
+              <p className="text-xs text-muted-foreground mt-2">
                 Units per category
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Gap</CardTitle>
+              <CardTitle className="text-sm font-medium w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <span>Total Gap</span>
+                  </div>
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {gapAnalysis.reduce((acc, item) => acc + item.gap, 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">{gapData.summary.totalGap}</div>
+              <p className="text-xs text-muted-foreground mt-2">
                 Total units needed
               </p>
             </CardContent>
@@ -138,7 +181,7 @@ export default function GapAnalysisPage() {
             placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="w-full pl-8"
           />
         </div>
         <div className="rounded-md border">
@@ -153,8 +196,8 @@ export default function GapAnalysisPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredGapItems.map((item) => (
-                <TableRow key={item.id} className="hover:bg-muted/50">
+              {filteredGapItems.map((item, index) => (
+                <TableRow key={index} className="hover:bg-muted/50">
                   <TableCell className="text-left font-medium">
                     {item.category}
                   </TableCell>
@@ -170,6 +213,13 @@ export default function GapAnalysisPage() {
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredGapItems.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4">
+                    No categories found
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>

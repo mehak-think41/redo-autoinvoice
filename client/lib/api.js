@@ -109,3 +109,13 @@ export const updateInvoiceStatus = async (invoiceId, action) => {
     throw error.response?.data || error;
   }
 };
+
+export const getGapAnalysis = async () => {
+  try {
+    const { data } = await api.get('/inventory/gap-analysis');
+    return data;
+  } catch (error) {
+    console.error('Error fetching gap analysis:', error);
+    throw error.response?.data || error;
+  }
+};

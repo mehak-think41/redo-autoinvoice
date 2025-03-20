@@ -71,24 +71,36 @@ const getGapAnalysis = async (req, res) => {
     try {
         const inventoryItems = await Inventory.find({ userId: req.user._id });
         
+        if (!inventoryItems || inventoryItems.length === 0) {
+            return res.json({
+                summary: {
+                    totalCategories: 0,
+                    highImpactGaps: 0,
+                    averageGap: 0,
+                    totalGap: 0
+                },
+                categories: []
+            });
+        }
+
         const gapAnalysis = inventoryItems
             .filter(item => item.shortages)
             .map(item => ({
-                category: item.name,
-                expected: item.shortages.expected,
-                actual: item.shortages.actual,
-                gap: item.shortages.gap,
-                impact: item.shortages.impact
+                category: item.name || 'Unnamed Category',
+                expected: item.shortages?.expected || 0,
+                actual: item.shortages?.actual || 0,
+                gap: item.shortages?.gap || 0,
+                impact: (item.shortages?.impact || 'Low').toLowerCase()
             }))
             .sort((a, b) => {
-                const impactOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
-                return impactOrder[b.impact] - impactOrder[a.impact];
+                const impactOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                return (impactOrder[b.impact] || 0) - (impactOrder[a.impact] || 0);
             });
 
         const totalCategories = gapAnalysis.length;
         const totalGap = gapAnalysis.reduce((sum, item) => sum + item.gap, 0);
-        const averageGap = totalGap / totalCategories;
-        const highImpactGaps = gapAnalysis.filter(item => item.impact === 'High').length;
+        const averageGap = totalCategories > 0 ? totalGap / totalCategories : 0;
+        const highImpactGaps = gapAnalysis.filter(item => item.impact === 'high').length;
 
         res.json({
             summary: {
@@ -102,7 +114,7 @@ const getGapAnalysis = async (req, res) => {
     } catch (error) {
         console.error('Error generating GAP analysis:', error);
         res.status(500).json({ 
-            message: "Error fetching GAP Analysis", 
+            message: "Failed to fetch gap analysis. Please try again.", 
             error: error.message 
         });
     }
