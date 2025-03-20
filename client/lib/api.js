@@ -75,7 +75,7 @@ export const logout = async () => {
 };
 
 export const getProcessedInvoices = async () => {
-  const response = await api.get("/doc?status=Approved");
+  const response = await api.get("/doc?status=Approved&status=Rejected");
   return response.data;
 };
 

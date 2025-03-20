@@ -42,7 +42,7 @@ export default function ProcessedPage() {
     (invoice) =>
       (invoice.invoice_number?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
       (invoice.vendor_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      invoice.total_amount?.toString().includes(searchTerm)
+      invoice.total?.toString().includes(searchTerm)
   )
 
   const sortedInvoices = [...filteredInvoices].sort((a, b) => {
@@ -53,8 +53,8 @@ export default function ProcessedPage() {
           : new Date(b.created_at) - new Date(a.created_at)
       case "amount":
         return sortConfig.direction === "asc"
-          ? a.total_amount - b.total_amount
-          : b.total_amount - a.total_amount
+          ? a.total - b.total
+          : b.total - a.total
       default:
         return 0
     }
@@ -80,7 +80,7 @@ export default function ProcessedPage() {
       invoice.invoice_number,
       invoice.vendor_name,
       new Date(invoice.created_at).toLocaleDateString(),
-      invoice.total_amount.toFixed(2)
+      invoice.total.toFixed(2)
     ])
 
     const csvContent = [headers, ...csvData]
@@ -115,8 +115,12 @@ export default function ProcessedPage() {
   }
 
   // Calculate statistics
-  const totalAmount = invoices.reduce((acc, inv) => acc + inv.total, 0)
-  const averageAmount = invoices.length ? totalAmount / invoices.length : 0
+  const approvedInvoices = invoices.filter(inv => inv.invoice_status === "Approved")
+  const rejectedInvoices = invoices.filter(inv => inv.invoice_status === "Rejected")
+  
+  const totalApprovedAmount = approvedInvoices.reduce((acc, inv) => acc + (inv.total || 0), 0)
+  const averageApprovedAmount = approvedInvoices.length ? totalApprovedAmount / approvedInvoices.length : 0
+  const totalRejectedAmount = rejectedInvoices.reduce((acc, inv) => acc + (inv.total || 0), 0)
   const totalProcessed = invoices.length
 
   return (
@@ -129,30 +133,41 @@ export default function ProcessedPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalProcessed}</div>
             <p className="text-xs text-muted-foreground">
-              processed invoices
+              {approvedInvoices.length} approved, {rejectedInvoices.length} rejected
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Amount</CardTitle>
+            <CardTitle className="text-sm font-medium">Average Amount (Approved)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${Math.round(averageAmount).toLocaleString()}
+              ${Math.round(averageApprovedAmount).toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">per invoice</p>
+            <p className="text-xs text-muted-foreground">per approved invoice</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Amount (Approved)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${totalAmount.toLocaleString()}
+              ${totalApprovedAmount.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">processed value</p>
+            <p className="text-xs text-muted-foreground">approved value</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Amount (Rejected)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${totalRejectedAmount.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">rejected value</p>
           </CardContent>
         </Card>
       </div>
@@ -182,8 +197,9 @@ export default function ProcessedPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left w-[25%]">Invoice Number</TableHead>
-                <TableHead className="text-left w-[25%]">Customer</TableHead>
+                <TableHead className="text-left w-[20%]">Invoice Number</TableHead>
+                <TableHead className="text-left w-[20%]">Customer</TableHead>
+                <TableHead className="text-center w-[15%]">Status</TableHead>
                 <TableHead className="text-center w-[15%] cursor-pointer" onClick={() => requestSort("date")}>
                   <div className="flex items-center justify-center">
                     Date {getSortIcon("date")}
@@ -194,51 +210,61 @@ export default function ProcessedPage() {
                     Amount {getSortIcon("amount")}
                   </div>
                 </TableHead>
-                <TableHead className="text-center w-[20%]">Actions</TableHead>
+                <TableHead className="text-center w-[15%]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Loading invoices...
+                  <TableCell colSpan={6} className="text-center py-4">
+                    Loading...
                   </TableCell>
                 </TableRow>
               ) : sortedInvoices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    No invoices found.
+                  <TableCell colSpan={6} className="text-center py-4">
+                    No invoices found
                   </TableCell>
                 </TableRow>
               ) : (
                 sortedInvoices.map((invoice) => (
                   <TableRow key={invoice._id}>
-                    <TableCell className="font-medium text-left w-[25%]">
-                      {invoice.invoice_number}
+                    <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                    <TableCell>{invoice.customer_details.email}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant={invoice.invoice_status === "Approved" ? "success" : "destructive"}
+                        className={`px-3 py-1 ${
+                          invoice.invoice_status === "Approved" 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {invoice.invoice_status}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-left w-[25%]">{invoice.customer_details.email}</TableCell>
-                    <TableCell className="text-center w-[15%]">
+                    <TableCell className="text-center">
                       {new Date(invoice.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-center w-[15%]">
-                      ${invoice.total.toLocaleString()}
+                    <TableCell className="text-center">
+                      ${invoice.total?.toLocaleString() || "0"}
                     </TableCell>
-                    <TableCell className="text-center w-[20%]">
+                    <TableCell className="text-center">
                       <div className="flex justify-center space-x-2">
                         <Button
-                          onClick={() => handleViewInvoice(invoice._id)}
                           size="sm"
                           variant="outline"
                           className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+                          onClick={() => handleViewInvoice(invoice._id)}
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
                         <Button
-                          onClick={() => handleDownloadInvoice(invoice)}
                           size="sm"
                           variant="outline"
                           className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800"
+                          onClick={() => handleDownloadInvoice(invoice)}
                         >
                           <FileDown className="h-4 w-4 mr-1" />
                           Download
