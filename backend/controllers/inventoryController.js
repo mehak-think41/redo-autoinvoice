@@ -1,4 +1,5 @@
 const Inventory = require('../models/Inventory');
+const { sendSupplierOrderEmail } = require('../services/emailService');
 
 // Create
 const createInventory = async (req, res) => {
@@ -142,6 +143,23 @@ const getInventoryShortages = async (req, res) => {
     }
 };
 
+// Send order email to supplier
+const sendSupplierOrder = async (req, res) => {
+  try {
+    const { supplierEmail, skus, additionalNotes } = req.body;
+
+    if (!supplierEmail || !skus || !Array.isArray(skus) || skus.length === 0) {
+      return res.status(400).json({ error: 'Invalid request data. Please provide supplierEmail and at least one SKU.' });
+    }
+
+    await sendSupplierOrderEmail(supplierEmail, skus, additionalNotes, req.user?.name);
+    res.status(200).json({ message: 'Order email sent successfully to supplier' });
+  } catch (error) {
+    console.error('Error sending supplier order email:', error);
+    res.status(500).json({ error: 'Failed to send order email' });
+  }
+};
+
 module.exports = {
   createInventory,
   getAllInventory,
@@ -149,5 +167,6 @@ module.exports = {
   updateInventory,
   deleteInventory,
   getGapAnalysis,
-  getInventoryShortages
+  getInventoryShortages,
+  sendSupplierOrder
 };

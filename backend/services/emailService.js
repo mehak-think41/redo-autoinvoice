@@ -187,6 +187,54 @@ const getMissingSkuCustomerTemplate = (invoice, skuDetails) => {
   };
 };
 
+// Email template for supplier order
+const getSupplierOrderTemplate = (skus, additionalNotes, userName) => {
+  const skuTableRows = skus.map(sku => `
+    <tr>
+      <td style="border: 1px solid #ddd; padding: 8px;">${sku.code}</td>
+      <td style="border: 1px solid #ddd; padding: 8px;">${sku.name}</td>
+      <td style="border: 1px solid #ddd; padding: 8px;">${sku.quantity}</td>
+      <td style="border: 1px solid #ddd; padding: 8px;">${sku.specifications || '-'}</td>
+    </tr>
+  `).join('');
+
+  return {
+    subject: `[${process.env.COMPANY_NAME}] Purchase Order Request`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50; text-align: center; padding: 20px 0;">Purchase Order Request</h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+          <p>Dear Supplier,</p>
+          <p>We would like to place an order for the following items:</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px;">SKU Code</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Item Name</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Quantity</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Specifications</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${skuTableRows}
+            </tbody>
+          </table>
+
+          ${additionalNotes ? `<p style="margin-top: 20px;"><strong>Additional Notes:</strong><br>${additionalNotes}</p>` : ''}
+          
+          <p style="margin-top: 20px;">Please confirm the availability and provide a quotation for the above items.</p>
+          
+          <p style="margin-top: 20px;">Best regards,<br>${userName || 'Purchasing Team'}</p>
+        </div>
+        <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 20px;">
+          This is an automated message from ${process.env.COMPANY_NAME}. Please reply to this email with your quotation.
+        </p>
+      </div>
+    `
+  };
+};
+
 const sendPendingInvoiceEmail = async (userEmail, invoice) => {
   try {
     const template = getPendingInvoiceEmailTemplate(invoice);
@@ -287,10 +335,30 @@ const sendMissingSkuCustomerEmail = async (customerEmail, invoice, skuDetails) =
   }
 };
 
+const sendSupplierOrderEmail = async (supplierEmail, skus, additionalNotes, userName) => {
+  try {
+    const { subject, html } = getSupplierOrderTemplate(skus, additionalNotes, userName);
+    
+    const mailOptions = {
+      from: process.env.SMTP_FROM,
+      to: supplierEmail,
+      subject,
+      html
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending supplier order email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendPendingInvoiceEmail,
   sendFlaggedInvoiceEmail,
   sendApprovedInvoiceCustomerEmail,
   sendDelayedDeliveryCustomerEmail,
-  sendMissingSkuCustomerEmail
+  sendMissingSkuCustomerEmail,
+  sendSupplierOrderEmail
 };
