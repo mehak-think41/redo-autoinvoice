@@ -57,7 +57,7 @@ const processInvoice = async (pdfUrl, userId, emailRecordId) => {
           Text: ${invoiceText}`,
           },
         ],
-        model: "mixtral-8x7b-32768",
+        model: "gemma2-9b-it",
         response_format: { type: "json_object" },
       });
       invoiceData = JSON.parse(chatCompletion.choices[0].message.content);
@@ -277,7 +277,7 @@ const analyzeEmailForInvoice = async (subject, headers, emailBody) => {
                 - Body: "${emailBody}"`,
         },
       ],
-      model: "mixtral-8x7b-32768",
+      model: "gemma2-9b-it",
       response_format: { type: "json_object" },
       temperature: 0.3,
     });

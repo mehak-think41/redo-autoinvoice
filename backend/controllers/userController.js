@@ -28,10 +28,27 @@ const getGmailInbox = async (req, res) => {
 const watchLive = async (req, res) => {
   try {
     const userId = req.user._id;
+    const { status } = req.body; // Accepting true or false from request body
+
+    if (typeof status !== 'boolean') {
+      return res.status(400).json({ success: false, message: 'Invalid status value. Expected true or false.' });
+    }
+
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    if (user.watchLive) {
+    if (status === user.watchLive) {
+      return res.json({ success: true, message: `Gmail live tracking is already ${status ? 'activated' : 'deactivated'}` });
+    }
+
+    if (status) {
+      // Activate live watch
+      const result = await googleAuthService.watchGmailInbox(userId);
+      user.watchLive = true;
+      await user.save();
+      console.log(`Activated Gmail watch for user: ${user._id} (${user.name})`);
+      return res.json({ success: true, message: 'Gmail live tracking activated', data: result });
+    } else {
       // Deactivate live watch
       await googleAuthService.stopGmailWatch(userId);
       user.watchLive = false;
@@ -39,18 +56,11 @@ const watchLive = async (req, res) => {
       console.log(`Stopped Gmail watch for user: ${user._id} (${user.name})`);
       return res.json({ success: true, message: 'Gmail live tracking deactivated' });
     }
-
-    // Activate live watch
-    const result = await googleAuthService.watchGmailInbox(userId);
-    user.watchLive = true;
-    await user.save();
-    console.log(`Activated Gmail watch for user: ${user._id} (${user.name})`);
-    return res.json({ success: true, message: 'Gmail live tracking activated', data: result });
   } catch (error) {
     console.error('Error toggling Gmail live watch:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 const getOAuth2Client = (redirectUri) => {
   return new google.auth.OAuth2(

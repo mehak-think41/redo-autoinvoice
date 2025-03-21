@@ -54,12 +54,12 @@ export const getCurrentUser = async () => {
 };
 
 // Watch live - call the watchlive endpoint
-export const watchLive = async () => {
+export const watchLive = async (status) => {
   try {
-    const response = await api.post("/users/watchlive");
-    return response.data.message;
+    const response = await api.post("/users/watchlive", { status });
+    return response.data; // Returning the whole response object
   } catch (error) {
-    console.error("Error calling watchlive:", error);
+    console.error("Error calling watchLive:", error);
     throw error;
   }
 };

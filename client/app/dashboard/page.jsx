@@ -32,7 +32,7 @@ export default function DashboardPage() {
         // Call watchLive API if not already called
         if (!watchLiveCalled) {
           console.log("Calling watchLive API from dashboard...");
-          const watchLiveMessage = await watchLive();
+          const watchLiveMessage = await watchLive(true);
           console.log("WatchLive API response:", watchLiveMessage);
           if (watchLiveMessage?.success) {
             toast({
