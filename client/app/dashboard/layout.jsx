@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }) {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Processed Invoices", href: "/dashboard/processed", icon: CheckSquare },
     { name: "Pending Approvals", href: "/dashboard/pending", icon: FileText },
-    { name: "Return Emails", href: "/dashboard/emails", icon: Mail },
+    // { name: "Return Emails", href: "/dashboard/emails", icon: Mail },
     { name: "Inventory", href: "/dashboard/inventory", icon: Package },
     { name: "GAP Analysis", href: "/dashboard/gap", icon: BarChart2 },
     { name: "Automation", href: "/dashboard/automation", icon: Play },
